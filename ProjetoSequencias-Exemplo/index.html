@@ -1,0 +1,92 @@
+<html>
+<head>
+    <style>
+        html {
+            overflow: hidden;
+            height: 100%;
+            width: 100%;
+            margin: 0;
+        }
+
+        body {
+            overflow: hidden;
+            height: 100%;
+            width: 100%;
+            margin: 0;
+        }
+    </style>
+
+    <style media='screen' type='text/css'>
+        @font-face {
+            font-family: font1; 
+            src: url('font/MyFont-Regular.otf');
+            font-weight: 400;
+            font-weight: normal;
+        }
+    </style>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0
+                ,minimum-scale=1.0, user-scalable=0, target-densityDpi=device-dpi">
+    <meta name="HandheldFriendly" content="true" />
+    <title>Sequências</title>
+
+
+    <link rel="shortcut icon" type="image/x-icon" href="https://www.hypatiamat.com/images/favicon.ico">
+</head>
+    <body >
+        <div style="font-family:font1; position:absolute; left:-1000px; visibility:hidden;">.</div>
+
+            <div >
+                <script>
+                var PleaseRotateOptions = {
+                    onlyMobile: true,
+                    forcePortrait: false,
+                    message: "Por Favor Rode o Ecrã",
+                    subMessage: "(ou clique para continuar)",
+                    allowClickBypass: true
+                }
+                </script> 
+                <script src="jquery.js"></script>
+                <script src="js/lib/backEndconnector.js"></script>
+                <script src="js/lib/loginInfo.js"></script>
+                <script src="phaser.min.js"></script>
+                <script src="js/pleaserotate.js"></script> 
+                <script src="js/Menu.js"></script>
+                <script src="js/Jogo.js"></script>
+                <script src="js/rankingScene.js"></script>
+                <script src="js/AlignGrid.js"></script>
+                <script src="gridTable.min.js"></script>
+                
+            </div>
+    </body>
+</html>
+
+<script>
+    var config = {
+        type: Phaser.CANVAS,
+        width: window.innerWidth * window.devicePixelRatio,
+        height: window.innerHeight * window.devicePixelRatio,
+        scale: {
+            mode: Phaser.Scale.FIT,
+            autoCenter: Phaser.Scale.CENTER_BOTH,
+            width: 2048,
+            height: 1200,
+        },
+        render: {
+            pixelArt: false
+        },
+        dom: {
+            createContainer: true
+        },
+        backgroundColor: "#ffffff",
+        parent: 'divId',
+        fullscreenTarget: 'divId',
+        scene: [Menu,Jogo,rankingScene],
+    }
+    var game = new Phaser.Game(config);
+    var infoUser = new loginInfo();
+    var stop = false; 
+    var flag = false; 
+    var please = ""; 
+</script>

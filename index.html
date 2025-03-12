@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <style>
+        head{
+            overflow: hidden;
+            height: 100%;
+            width: 100%;
+            margin: 0;
+        }
+
+        body{
+            overflow: hidden;
+            height: 100%;
+            width: 100%;
+            margin: 0;
+        }
+    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phaser</title>
+</head>
+<body>
+    <div>
+        <script src="phaser.js"></script>
+        <script src="Menu.js"></script>
+    </div>
+</body>
+</html>
+        <script>
+            var config = {
+                type : Phaser.AUTO,
+                width: window.innerWidth * window.devicePixelRatio,
+                height: window.innerHeight * window.devicePixelRatio,
+                scale:{
+                    mode:Phaser.Scale.FIT,
+                    autoCenter: Phaser.Scale.CENTER_BOTH,
+                    width: 1920,
+                    height: 1080,
+                },
+                render:{
+                    pixelArt: false
+                },
+                dom: {
+                    createContainer: true
+                },
+                backgroundColor: "#ffffff",
+                parent: 'divId',
+                fullscreenTarget: 'divId',
+                scene: [Menu],
+            }
+            var game = new Phaser.Game(config);
+        </script>
