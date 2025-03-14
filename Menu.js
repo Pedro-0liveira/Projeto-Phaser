@@ -7,6 +7,7 @@ let height;
 let scale;
 let dificuldade;
 let tamanho;
+let BTlock;
 
 class Menu extends Phaser.Scene{
     constructor(){
@@ -30,7 +31,7 @@ class Menu extends Phaser.Scene{
         this.load.image("Tamanho 5x5", "sprites/bt_5por5.png");
 
         //temp backbutton
-        this.load.image("Voltar", "sprites/quadradinho3por3.png");
+        this.load.image("Voltar", "sprites/quadradoback.png");
     }
     create(){
         width = game.config.width;
@@ -38,6 +39,7 @@ class Menu extends Phaser.Scene{
         scale = 0.9;
         dificuldade = 0;
         tamanho = 0;
+        BTlock = false;
 
         //Fundo
         this.background = this.add.sprite(width * 0.5, height * 0.5, "background");
@@ -114,6 +116,12 @@ class Menu extends Phaser.Scene{
         this.voltarBT.setScale(0.63);
         this.voltarBT.setInteractive({ useHandCursor: true });
 
+        this.debugText = this.add.text(10, 10, '', { fontSize: '16px', fill: '#fff' }).setVisible(false);
+        this.input.keyboard.on('keydown-D', () => {
+            debugMode = !debugMode;
+            this.debugText.setVisible(debugMode);
+        });
+
         //Funcionalidade BTs
         this.input.on('gameobjectover',function(pointer, gameObject) {
             if ( gameObject != this.boneco ){
@@ -128,86 +136,131 @@ class Menu extends Phaser.Scene{
             }
         },this);
 
+        const fadeIn = (btn) => {
+            btn.setAlpha(0).setVisible(true);
+            this.tweens.add({ targets: btn, alpha: 1, duration: 200 });
+        };
+
+        const fadeOut = (btn, callback) => {
+            this.tweens.add({ targets: btn, alpha: 0, duration: 200, onComplete: () => { btn.setVisible(false); if (callback) callback(); } });
+        };
+
         this.input.on('gameobjectdown', function(pointer, gameObject) {
-            switch(gameObject) {
-                case this.nivel1BT:
-                    this.nivel1BT.visible = false;
-                    this.nivel2BT.visible = false;
-                    this.nivel3BT.visible = false;
-                    this.tam3BT.visible = true;
-                    this.tam4BT.visible = true;
-                    this.tam5BT.visible = true;
-                    this.voltarBT.visible = true;
-                    dificuldade = 1;
+            if(!BTlock){
+                switch(gameObject) {
+                    /*case this.nivel1BT:
+                        this.nivel1BT.visible = false;
+                        this.nivel2BT.visible = false;
+                        this.nivel3BT.visible = false;
+                        this.tam3BT.visible = true;
+                        this.tam4BT.visible = true;
+                        this.tam5BT.visible = true;
+                        this.voltarBT.visible = true;
+                        dificuldade = 1;
+                        break;
+                    case this.nivel2BT:
+                        this.nivel1BT.visible = false;
+                        this.nivel2BT.visible = false;
+                        this.nivel3BT.visible = false;
+                        this.tam3BT.visible = true;
+                        this.tam4BT.visible = true;
+                        this.tam5BT.visible = true;
+                        this.voltarBT.visible = true;
 
-                    break;
-                case this.nivel2BT:
-                    this.nivel1BT.visible = false;
-                    this.nivel2BT.visible = false;
-                    this.nivel3BT.visible = false;
-                    this.tam3BT.visible = true;
-                    this.tam4BT.visible = true;
-                    this.tam5BT.visible = true;
-                    this.voltarBT.visible = true;
+                        dificuldade = 2;
 
-                    dificuldade = 2;
+                        break;
+                    case this.nivel3BT:
+                        this.nivel1BT.visible = false;
+                        this.nivel2BT.visible = false;
+                        this.nivel3BT.visible = false;
+                        this.tam3BT.visible = true;
+                        this.tam4BT.visible = true;
+                        this.tam5BT.visible = true;
+                        this.voltarBT.visible = true;
 
-                    break;
-                case this.nivel3BT:
-                    this.nivel1BT.visible = false;
-                    this.nivel2BT.visible = false;
-                    this.nivel3BT.visible = false;
-                    this.tam3BT.visible = true;
-                    this.tam4BT.visible = true;
-                    this.tam5BT.visible = true;
-                    this.voltarBT.visible = true;
+                        dificuldade = 3;
 
-                    dificuldade = 3;
+                        break;
+                    case this.voltarBT:
+                        //Back button logic (TEMP)
+                        this.nivel1BT.visible = true;
+                        this.nivel2BT.visible = true;
+                        this.nivel3BT.visible = true;
+                        this.tam3BT.visible = false;
+                        this.tam4BT.visible = false;
+                        this.tam5BT.visible = false;
+                        this.voltarBT.visible = false;
+                        dificuldade = 0;
+                        
+                        break;*/
 
-                    break;
-                case this.voltarBT:
-                    //Back button logic (TEMP)
-                    this.nivel1BT.visible = true;
-                    this.nivel2BT.visible = true;
-                    this.nivel3BT.visible = true;
-                    this.tam3BT.visible = false;
-                    this.tam4BT.visible = false;
-                    this.tam5BT.visible = false;
-                    this.voltarBT.visible = false;
-                    
-                    dificuldade = 0;
-                    
-                    break;
-                case this.topBT:
-                    break;
-                case this.infoBT:
-                    break;
-                case this.credBT:
-                    break;
-                case this.boneco:
-                    if ( ! this.boneco.isSpinning ){
-                        this.boneco.isSpinning = true
-                        this.tweens.add({
-                            targets: this.boneco,
-                            angle: '+=360', 
-                            duration: 1500, 
-                            ease: 'Cubic.easeOut', 
-                            onComplete: () => {
-                                this.boneco.isSpinning = false; 
-                            }
+                    case this.nivel1BT:
+                    case this.nivel2BT:
+                    case this.nivel3BT:
+                        fadeOut(this.nivel1BT);
+                        fadeOut(this.nivel2BT);
+                        fadeOut(this.nivel3BT, () => {
+                            fadeIn(this.tam3BT);
+                            fadeIn(this.tam4BT);
+                            fadeIn(this.tam5BT);
+                            fadeIn(this.voltarBT);
+                            BTlock = false;
                         });
-                    }
-                    break;
-                case this.maxBT:
-                    this.scale.startFullscreen();
-                    this.maxBT.visible = false;
-                    this.minBT.visible = true;
-                    break;
-                case this.minBT:
-                    this.scale.stopFullscreen();
-                    this.maxBT.visible = true;
-                    this.minBT.visible = false;
-                    break;
+                        dificuldade = gameObject === this.nivel1BT ? 1 : gameObject === this.nivel2BT ? 2 : 3;
+                        break;
+                    case this.voltarBT:
+                        fadeOut(this.tam3BT);
+                        fadeOut(this.tam4BT);
+                        fadeOut(this.tam5BT);
+                        fadeOut(this.voltarBT, () => {
+                            fadeIn(this.nivel1BT);
+                            fadeIn(this.nivel2BT);
+                            fadeIn(this.nivel3BT);
+                            BTlock = false;
+                        });
+                        dificuldade = 0;
+                        break;
+                    case this.tam3BT:
+                        tamanho = 3;
+                        break;
+                    case this.tam4BT:
+                        tamanho = 4;
+                        break;
+                    case this.tam5BT:
+                        tamanho = 5;
+                        break;
+                    case this.topBT:
+                        break;
+                    case this.infoBT:
+                        break;
+                    case this.credBT:
+                        break;
+                    case this.boneco:
+                        if ( ! this.boneco.isSpinning ){
+                            this.boneco.isSpinning = true
+                            this.tweens.add({
+                                targets: this.boneco,
+                                angle: '+=360', 
+                                duration: 1500, 
+                                ease: 'Cubic.easeOut', 
+                                onComplete: () => {
+                                    this.boneco.isSpinning = false; 
+                                }
+                            });
+                        }
+                        break;
+                    case this.maxBT:
+                        this.scale.startFullscreen();
+                        this.maxBT.visible = false;
+                        this.minBT.visible = true;
+                        break;
+                    case this.minBT:
+                        this.scale.stopFullscreen();
+                        this.maxBT.visible = true;
+                        this.minBT.visible = false;
+                        break;
+                }
             }
         },this);
     }
