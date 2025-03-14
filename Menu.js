@@ -138,66 +138,20 @@ class Menu extends Phaser.Scene{
 
         const fadeIn = (btn) => {
             btn.setAlpha(0).setVisible(true);
-            this.tweens.add({ targets: btn, alpha: 1, duration: 200 });
+            this.tweens.add({ targets: btn, alpha: 1, duration: 200, onComplete: () => { BTlock = false; } });
         };
 
         const fadeOut = (btn, callback) => {
-            this.tweens.add({ targets: btn, alpha: 0, duration: 200, onComplete: () => { btn.setVisible(false); if (callback) callback(); } });
+            this.tweens.add({ targets: btn, alpha: 0, duration: 300, onComplete: () => { btn.setVisible(false); if (callback) callback(); } });
         };
 
         this.input.on('gameobjectdown', function(pointer, gameObject) {
-            if(!BTlock){
-                switch(gameObject) {
-                    /*case this.nivel1BT:
-                        this.nivel1BT.visible = false;
-                        this.nivel2BT.visible = false;
-                        this.nivel3BT.visible = false;
-                        this.tam3BT.visible = true;
-                        this.tam4BT.visible = true;
-                        this.tam5BT.visible = true;
-                        this.voltarBT.visible = true;
-                        dificuldade = 1;
-                        break;
-                    case this.nivel2BT:
-                        this.nivel1BT.visible = false;
-                        this.nivel2BT.visible = false;
-                        this.nivel3BT.visible = false;
-                        this.tam3BT.visible = true;
-                        this.tam4BT.visible = true;
-                        this.tam5BT.visible = true;
-                        this.voltarBT.visible = true;
-
-                        dificuldade = 2;
-
-                        break;
-                    case this.nivel3BT:
-                        this.nivel1BT.visible = false;
-                        this.nivel2BT.visible = false;
-                        this.nivel3BT.visible = false;
-                        this.tam3BT.visible = true;
-                        this.tam4BT.visible = true;
-                        this.tam5BT.visible = true;
-                        this.voltarBT.visible = true;
-
-                        dificuldade = 3;
-
-                        break;
-                    case this.voltarBT:
-                        //Back button logic (TEMP)
-                        this.nivel1BT.visible = true;
-                        this.nivel2BT.visible = true;
-                        this.nivel3BT.visible = true;
-                        this.tam3BT.visible = false;
-                        this.tam4BT.visible = false;
-                        this.tam5BT.visible = false;
-                        this.voltarBT.visible = false;
-                        dificuldade = 0;
-                        
-                        break;*/
-
-                    case this.nivel1BT:
-                    case this.nivel2BT:
-                    case this.nivel3BT:
+            switch(gameObject){
+                case this.nivel1BT:
+                case this.nivel2BT:
+                case this.nivel3BT:
+                    if(!BTlock){
+                        BTlock = true;
                         fadeOut(this.nivel1BT);
                         fadeOut(this.nivel2BT);
                         fadeOut(this.nivel3BT, () => {
@@ -205,11 +159,13 @@ class Menu extends Phaser.Scene{
                             fadeIn(this.tam4BT);
                             fadeIn(this.tam5BT);
                             fadeIn(this.voltarBT);
-                            BTlock = false;
                         });
                         dificuldade = gameObject === this.nivel1BT ? 1 : gameObject === this.nivel2BT ? 2 : 3;
-                        break;
-                    case this.voltarBT:
+                    }
+                    break;
+                case this.voltarBT:
+                    if(!BTlock){
+                        BTlock = true;
                         fadeOut(this.tam3BT);
                         fadeOut(this.tam4BT);
                         fadeOut(this.tam5BT);
@@ -217,50 +173,50 @@ class Menu extends Phaser.Scene{
                             fadeIn(this.nivel1BT);
                             fadeIn(this.nivel2BT);
                             fadeIn(this.nivel3BT);
-                            BTlock = false;
                         });
                         dificuldade = 0;
-                        break;
-                    case this.tam3BT:
-                        tamanho = 3;
-                        break;
-                    case this.tam4BT:
-                        tamanho = 4;
-                        break;
-                    case this.tam5BT:
-                        tamanho = 5;
-                        break;
-                    case this.topBT:
-                        break;
-                    case this.infoBT:
-                        break;
-                    case this.credBT:
-                        break;
-                    case this.boneco:
-                        if ( ! this.boneco.isSpinning ){
-                            this.boneco.isSpinning = true
-                            this.tweens.add({
-                                targets: this.boneco,
-                                angle: '+=360', 
-                                duration: 1500, 
-                                ease: 'Cubic.easeOut', 
-                                onComplete: () => {
-                                    this.boneco.isSpinning = false; 
-                                }
-                            });
-                        }
-                        break;
-                    case this.maxBT:
-                        this.scale.startFullscreen();
-                        this.maxBT.visible = false;
-                        this.minBT.visible = true;
-                        break;
-                    case this.minBT:
-                        this.scale.stopFullscreen();
-                        this.maxBT.visible = true;
-                        this.minBT.visible = false;
-                        break;
-                }
+                        tamanho = 0;
+                    }
+                    break;
+                case this.tam3BT:
+                    tamanho = 3;
+                    break;
+                case this.tam4BT:
+                    tamanho = 4;
+                    break;
+                case this.tam5BT:
+                    tamanho = 5;
+                    break;
+                case this.topBT:
+                    break;
+                case this.infoBT:
+                    break;
+                case this.credBT:
+                    break;
+                case this.boneco:
+                    if ( ! this.boneco.isSpinning ){
+                        this.boneco.isSpinning = true
+                        this.tweens.add({
+                            targets: this.boneco,
+                            angle: '+=360', 
+                            duration: 1500, 
+                            ease: 'Cubic.easeOut', 
+                            onComplete: () => {
+                                this.boneco.isSpinning = false; 
+                            }
+                        });
+                    }
+                    break;
+                case this.maxBT:
+                    this.scale.startFullscreen();
+                    this.maxBT.visible = false;
+                    this.minBT.visible = true;
+                    break;
+                case this.minBT:
+                    this.scale.stopFullscreen();
+                    this.maxBT.visible = true;
+                    this.minBT.visible = false;
+                    break;
             }
         },this);
     }
