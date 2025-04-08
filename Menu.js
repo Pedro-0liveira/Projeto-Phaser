@@ -22,8 +22,9 @@ class Menu extends Phaser.Scene{
         this.load.image("Creditos", "sprites/bt_creditos.png");
         this.load.image("Info", "sprites/bt_info.png");
         this.load.image("Top", "sprites/bt_top.png");
-        this.load.image("Maximizar", "sprites/fullscreenBT-1temp.png");
-        this.load.image("Minimizar", "sprites/fullscreenBT-2temp.png");
+        this.load.image("Maximizar", "sprites/fullscreen-bt-1.png");
+        this.load.image("Minimizar", "sprites/fullscreen-bt-2.png");
+        this.load.image("Login", "sprites/login-bt.png");
 
         //temp
         this.load.image("Tamanho 3x3", "sprites/bt_3por3.png");
@@ -98,6 +99,11 @@ class Menu extends Phaser.Scene{
         this.credBT = this.add.image(width * 0.08, height * 0.93, "Creditos");
         this.credBT.setScale(scale);
         this.credBT.setInteractive({ useHandCursor: true });
+
+        //Botao Login
+        this.loginBT = this.add.image(width * 0.42, height * 0.93, "Login");
+        this.loginBT.setScale(scale);
+        this.loginBT.setInteractive({ useHandCursor: true });
 
         //Botao fullscreen (TEMP)
         this.maxBT = this.add.image(width * 0.065, height * 0.1, "Maximizar");
