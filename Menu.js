@@ -32,7 +32,7 @@ class Menu extends Phaser.Scene{
         this.load.image("Tamanho 5x5", "sprites/bt_5por5.png");
 
         //temp backbutton
-        this.load.image("Voltar", "sprites/quadradoback.png");
+        this.load.image("Voltar", "sprites/bt_fechar.png");
     }
     create(){
         width = game.config.width;
@@ -119,7 +119,7 @@ class Menu extends Phaser.Scene{
         //Botao voltar (TEMP)
         this.voltarBT = this.add.image(width * 0.32, height * 0.81, "Voltar");
         this.voltarBT.visible = false;
-        this.voltarBT.setScale(0.63);
+        this.voltarBT.setScale(scale);
         this.voltarBT.setInteractive({ useHandCursor: true });
 
         this.debugText = this.add.text(10, 10, '', { fontSize: '16px', fill: '#fff' }).setVisible(false);
