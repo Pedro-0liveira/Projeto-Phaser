@@ -186,12 +186,15 @@ class Menu extends Phaser.Scene{
                     break;
                 case this.tam3BT:
                     tamanho = 3;
+                    this.scene.start("Game", { dificuldade: dificuldade, tamanho: tamanho });
                     break;
                 case this.tam4BT:
                     tamanho = 4;
+                    this.scene.start("Game", { dificuldade: dificuldade, tamanho: tamanho });
                     break;
                 case this.tam5BT:
                     tamanho = 5;
+                    this.scene.start("Game", { dificuldade: dificuldade, tamanho: tamanho });
                     break;
                 case this.topBT:
                     break;
