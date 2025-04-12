@@ -5,8 +5,8 @@ let y;
 let width;
 let height;
 let scale;
-let dificuldade;
-let tamanho;
+let difficulty;
+let size;
 let BTlock;
 
 class Menu extends Phaser.Scene{
@@ -38,8 +38,8 @@ class Menu extends Phaser.Scene{
         width = game.config.width;
         height = game.config.height;
         scale = 0.9;
-        dificuldade = 0;
-        tamanho = 0;
+        difficulty = 0;
+        size = 0;
         BTlock = false;
 
         //Fundo
@@ -166,7 +166,7 @@ class Menu extends Phaser.Scene{
                             fadeIn(this.tam5BT);
                             fadeIn(this.voltarBT);
                         });
-                        dificuldade = gameObject === this.nivel1BT ? 1 : gameObject === this.nivel2BT ? 2 : 3;
+                        difficulty = gameObject === this.nivel1BT ? 1 : gameObject === this.nivel2BT ? 2 : 3;
                     }
                     break;
                 case this.voltarBT:
@@ -180,21 +180,21 @@ class Menu extends Phaser.Scene{
                             fadeIn(this.nivel2BT);
                             fadeIn(this.nivel3BT);
                         });
-                        dificuldade = 0;
-                        tamanho = 0;
+                        difficulty = 0;
+                        size = 0;
                     }
                     break;
                 case this.tam3BT:
-                    tamanho = 3;
-                    this.scene.start("Game", { dificuldade: dificuldade, tamanho: tamanho });
+                    size = 3;
+                    this.scene.start("Game", { difficulty: difficulty, size: size });
                     break;
                 case this.tam4BT:
-                    tamanho = 4;
-                    this.scene.start("Game", { dificuldade: dificuldade, tamanho: tamanho });
+                    size = 4;
+                    this.scene.start("Game", { difficulty: difficulty, size: size });
                     break;
                 case this.tam5BT:
-                    tamanho = 5;
-                    this.scene.start("Game", { dificuldade: dificuldade, tamanho: tamanho });
+                    size = 5;
+                    this.scene.start("Game", { difficulty: difficulty, size: size });
                     break;
                 case this.topBT:
                     break;
