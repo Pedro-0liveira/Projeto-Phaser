@@ -81,15 +81,51 @@ class Game extends Phaser.Scene{
         this.gridSize = this.size; // All levels use a 3x3 grid based on your image
         this.cellSize = 70; // Adjust based on your game size
         this.cellPadding = 150; // Space between cells for operations
+
+        if (this.gridSize === 3){
+            this.gridScale = 1;
+            this.gridNumberOpScale = 2;
+        } else if (this.gridSize === 4){
+            this.gridScale = 0.8;
+            this.gridNumberOpScale = 1.8;
+        } else {
+            this.gridScale = 0.65;
+            this.gridNumberOpScale = 1.5;
+        }
+
+        this.cellSize *= this.gridScale; // Adjust cell size based on grid scale
+        this.cellPadding *= this.gridScale; // Adjust padding based on grid scale
         
         // Calculate starting position for the grid (center of screen)
-        const gridWidth = (this.cellSize * this.gridSize) + (this.cellPadding * (this.gridSize - 1));
-        const gridHeight = (this.cellSize * this.gridSize) + (this.cellPadding * (this.gridSize - 1));
-        const startX = (width * 0.6) - (gridWidth / 2);
+        const gridWidth = ((this.cellSize * this.gridSize) + (this.cellPadding * (this.gridSize - 1)));
+        const gridHeight = ((this.cellSize * this.gridSize) + (this.cellPadding * (this.gridSize - 1)));
+
+        
+        const startX = (width * 0.66) - (gridWidth / 2);
         const startY = (height * 0.5) - (gridHeight / 2);
         
         // Create the puzzle
         const puzzle = this.generatePuzzle();
+
+        // Adiciona este código para mostrar a solução na consola
+        console.log("Solução do Crucigrama:");
+        console.log("Matriz de Números:");
+        for (let row = 0; row < this.gridSize; row++) {
+            console.log(puzzle.grid[row].join("\t"));
+        }
+        
+        console.log("\nOperações Horizontais:");
+        for (let row = 0; row < this.gridSize; row++) {
+            console.log(puzzle.horizontalOps[row].join("\t"));
+        }
+        
+        console.log("\nOperações Verticais:");
+        for (let row = 0; row < this.gridSize - 1; row++) {
+            console.log(puzzle.verticalOps[row].join("\t"));
+        }
+        
+        console.log("\nResultados das Linhas:", puzzle.rowResults);
+        console.log("Resultados das Colunas:", puzzle.colResults);
         
         // Store the puzzle components
         this.cells = [];
@@ -114,22 +150,22 @@ class Game extends Phaser.Scene{
                 switch(this.difficulty) {
                 case 1:
                     cell = this.add.image(cellX, cellY, "QuadradoNivel1");
-                    cell.setScale(0.8); // Adjust scale as needed
+                    cell.setScale(0.8 * this.gridScale); // Adjust scale as needed
                     cell.setInteractive({ useHandCursor: true });
                     break;
                 case 2:
                     cell = this.add.image(cellX, cellY, "QuadradoNivel2");
-                    cell.setScale(0.8); // Adjust scale as needed
+                    cell.setScale(0.8 * this.gridScale); // Adjust scale as needed
                     cell.setInteractive({ useHandCursor: true });
                     break;
                 case 3:
                     cell = this.add.image(cellX, cellY, "QuadradoNivel3");
-                    cell.setScale(0.8); // Adjust scale as needed
+                    cell.setScale(0.8 * this.gridScale); // Adjust scale as needed
                     cell.setInteractive({ useHandCursor: true });
                     break;
                 default:
                     cell = this.add.image(cellX, cellY, "QuadradoNivel1");
-                    cell.setScale(0.8); // Adjust scale as needed
+                    cell.setScale(0.8 * this.gridScale); // Adjust scale as needed
                     cell.setInteractive({ useHandCursor: true });
                 }
                 // Add number text (initially empty, player will fill)
@@ -157,7 +193,7 @@ class Game extends Phaser.Scene{
                     const opText = this.add.text(
                         opX, opY, 
                         puzzle.horizontalOps[row][col], 
-                        { fontSize: '28px', fontFamily: 'Arial', color: '#ffffff' }
+                        { fontSize: `${Math.round(28 * this.gridNumberOpScale)}px`, fontFamily: 'Arial', color: '#ffffff' }
                     ).setOrigin(0.5);
                     
                     this.horizontalOps[row][col] = {
@@ -174,7 +210,7 @@ class Game extends Phaser.Scene{
                     const opText = this.add.text(
                         opX, opY,
                         puzzle.verticalOps[row][col],
-                        { fontSize: '28px', fontFamily: 'Arial', color: '#ffffff' }
+                        { fontSize: `${Math.round(28 * this.gridNumberOpScale)}px`, fontFamily: 'Arial', color: '#ffffff' }
                     ).setOrigin(0.5);
                     
                     this.verticalOps[row][col] = {
@@ -185,37 +221,38 @@ class Game extends Phaser.Scene{
             }
             
             // Add row result (at the end of each row)
-            const rowResultX = startX + this.gridSize * (this.cellSize + this.cellPadding);
+            const rowResultX = startX + (this.gridSize * 1.1) * (this.cellSize + this.cellPadding);
             const rowResultY = startY + (row * (this.cellSize + this.cellPadding));
+
             
             this.add.text(
                 rowResultX - this.cellPadding, rowResultY, 
                 '=', 
-                { fontSize: '28px', fontFamily: 'Arial', color: '#ffffff' }
+                { fontSize: `${Math.round(28 * this.gridNumberOpScale)}px`, fontFamily: 'Arial', color: '#ffffff' }
             ).setOrigin(0.5);
             
             this.add.text(
                 rowResultX, rowResultY,
                 puzzle.rowResults[row].toString(),
-                { fontSize: '28px', fontFamily: 'Arial', color: '#ffffff' }
+                { fontSize: `${Math.round(28 * this.gridNumberOpScale)}px`, fontFamily: 'Arial', color: '#ffffff' }
             ).setOrigin(0.5);
         }
         
         // Add column results (at the bottom of each column)
         for (let col = 0; col < this.gridSize; col++) {
             const colResultX = startX + (col * (this.cellSize + this.cellPadding));
-            const colResultY = startY + this.gridSize * (this.cellSize + this.cellPadding);
+            const colResultY = startY + (this.gridSize * 1.1) * (this.cellSize + this.cellPadding);
             
             this.add.text(
                 colResultX, colResultY - this.cellPadding, 
                 '=', 
-                { fontSize: '28px', fontFamily: 'Arial', color: '#ffffff' }
+                { fontSize: `${Math.round(28 * this.gridNumberOpScale)}px`, fontFamily: 'Arial', color: '#ffffff' }
             ).setOrigin(0.5);
             
             this.add.text(
                 colResultX, colResultY,
                 puzzle.colResults[col].toString(),
-                { fontSize: '28px', fontFamily: 'Arial', color: '#ffffff' }
+                { fontSize: `${Math.round(28 * this.gridNumberOpScale)}px`, fontFamily: 'Arial', color: '#ffffff' }
             ).setOrigin(0.5);
         }
         
@@ -318,7 +355,7 @@ class Game extends Phaser.Scene{
                     continue; // Try another operation
                 }
             }
-            
+    
             // For level 3, check if division will result in whole number
             if (this.difficulty === 3 && operation === '÷') {
                 const nextValue = Phaser.Math.Between(1, 9);
@@ -382,7 +419,6 @@ class Game extends Phaser.Scene{
                                 break;
                             }
                         }
-                        
                         // If no valid divisor found, change operation
                         if (val1 % grid[row][col + 1] !== 0) {
                             horizontalOps[row][col] = Phaser.Math.RND.pick(['+', '-', '×']);
@@ -444,7 +480,7 @@ class Game extends Phaser.Scene{
         for (let i = 0; i < ops.length; i++) {
             if (ops[i] === '+') {
                 result += nums[i + 1];
-            } else if (ops[i] === '-') {
+            } else if (ops[i] === '-' && result >= nums[i + 1]){
                 result -= nums[i + 1];
             }
         }
