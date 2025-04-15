@@ -77,417 +77,148 @@ class Game extends Phaser.Scene{
         
     }
     createCrucigrama() {
-        // Define grid properties
-        this.gridSize = this.size; // All levels use a 3x3 grid based on your image
-        this.cellSize = 70; // Adjust based on your game size
-        this.cellPadding = 150; // Space between cells for operations
-
-        if (this.gridSize === 3){
-            this.gridScale = 1;
-            this.gridNumberOpScale = 2;
-        } else if (this.gridSize === 4){
-            this.gridScale = 0.8;
-            this.gridNumberOpScale = 1.8;
-        } else {
-            this.gridScale = 0.65;
-            this.gridNumberOpScale = 1.5;
-        }
-
-        this.cellSize *= this.gridScale; // Adjust cell size based on grid scale
-        this.cellPadding *= this.gridScale; // Adjust padding based on grid scale
-        
-        // Calculate starting position for the grid (center of screen)
-        const gridWidth = ((this.cellSize * this.gridSize) + (this.cellPadding * (this.gridSize - 1)));
-        const gridHeight = ((this.cellSize * this.gridSize) + (this.cellPadding * (this.gridSize - 1)));
-
-        
-        const startX = (width * 0.66) - (gridWidth / 2);
-        const startY = (height * 0.5) - (gridHeight / 2);
-        
-        // Create the puzzle
-        const puzzle = this.generatePuzzle();
-
-        // Adiciona este código para mostrar a solução na consola
-        console.log("Solução do Crucigrama:");
-        console.log("Matriz de Números:");
-        for (let row = 0; row < this.gridSize; row++) {
-            console.log(puzzle.grid[row].join("\t"));
-        }
-        
-        console.log("\nOperações Horizontais:");
-        for (let row = 0; row < this.gridSize; row++) {
-            console.log(puzzle.horizontalOps[row].join("\t"));
-        }
-        
-        console.log("\nOperações Verticais:");
-        for (let row = 0; row < this.gridSize - 1; row++) {
-            console.log(puzzle.verticalOps[row].join("\t"));
-        }
-        
-        console.log("\nResultados das Linhas:", puzzle.rowResults);
-        console.log("Resultados das Colunas:", puzzle.colResults);
-        
-        // Store the puzzle components
-        this.cells = [];
-        this.horizontalOps = [];
-        this.verticalOps = [];
-        this.rowResults = puzzle.rowResults;
-        this.colResults = puzzle.colResults;
-        
-        // Create the grid cells
-        for (let row = 0; row < this.gridSize; row++) {
-            this.cells[row] = [];
-            this.horizontalOps[row] = [];
-            this.verticalOps[row] = [];
-            
-            for (let col = 0; col < this.gridSize; col++) {
-                // Calculate cell position
-                const cellX = startX + (col * (this.cellSize + this.cellPadding));
-                const cellY = startY + (row * (this.cellSize + this.cellPadding));
-                
-                let cell;
-                // Create the cell (pentagon sprite)
-                switch(this.difficulty) {
-                case 1:
-                    cell = this.add.image(cellX, cellY, "QuadradoNivel1");
-                    cell.setScale(0.8 * this.gridScale); // Adjust scale as needed
-                    cell.setInteractive({ useHandCursor: true });
-                    break;
-                case 2:
-                    cell = this.add.image(cellX, cellY, "QuadradoNivel2");
-                    cell.setScale(0.8 * this.gridScale); // Adjust scale as needed
-                    cell.setInteractive({ useHandCursor: true });
-                    break;
-                case 3:
-                    cell = this.add.image(cellX, cellY, "QuadradoNivel3");
-                    cell.setScale(0.8 * this.gridScale); // Adjust scale as needed
-                    cell.setInteractive({ useHandCursor: true });
-                    break;
-                default:
-                    cell = this.add.image(cellX, cellY, "QuadradoNivel1");
-                    cell.setScale(0.8 * this.gridScale); // Adjust scale as needed
-                    cell.setInteractive({ useHandCursor: true });
-                }
-                // Add number text (initially empty, player will fill)
-                const textStyle = { fontSize: '24px', fontFamily: 'Arial', color: '#ffffff' };
-                const cellText = this.add.text(cellX, cellY, '', textStyle).setOrigin(0.5);
-                
-                // Store references to cell elements
-                this.cells[row][col] = {
-                    sprite: cell,
-                    text: cellText,
-                    value: null, // Player will fill this
-                    correctValue: puzzle.grid[row][col] // The correct answer
-                };
-                
-                // Add cell selection handling
-                cell.on('pointerdown', () => {
-                    this.selectCell(row, col);
-                });
-                
-                // Add horizontal operations (between columns)
-                if (col < this.gridSize - 1) {
-                    const opX = cellX + this.cellSize/2 + this.cellPadding/2;
-                    const opY = cellY;
-                    
-                    const opText = this.add.text(
-                        opX, opY, 
-                        puzzle.horizontalOps[row][col], 
-                        { fontSize: `${Math.round(28 * this.gridNumberOpScale)}px`, fontFamily: 'Arial', color: '#ffffff' }
-                    ).setOrigin(0.5);
-                    
-                    this.horizontalOps[row][col] = {
-                        text: opText,
-                        value: puzzle.horizontalOps[row][col]
-                    };
-                }
-                
-                // Add vertical operations (between rows)
-                if (row < this.gridSize - 1) {
-                    const opX = cellX;
-                    const opY = cellY + this.cellSize/2 + this.cellPadding/2;
-                    
-                    const opText = this.add.text(
-                        opX, opY,
-                        puzzle.verticalOps[row][col],
-                        { fontSize: `${Math.round(28 * this.gridNumberOpScale)}px`, fontFamily: 'Arial', color: '#ffffff' }
-                    ).setOrigin(0.5);
-                    
-                    this.verticalOps[row][col] = {
-                        text: opText,
-                        value: puzzle.verticalOps[row][col]
-                    };
-                }
-            }
-            
-            // Add row result (at the end of each row)
-            const rowResultX = startX + (this.gridSize * 1.1) * (this.cellSize + this.cellPadding);
-            const rowResultY = startY + (row * (this.cellSize + this.cellPadding));
-
-            
-            this.add.text(
-                rowResultX - this.cellPadding, rowResultY, 
-                '=', 
-                { fontSize: `${Math.round(28 * this.gridNumberOpScale)}px`, fontFamily: 'Arial', color: '#ffffff' }
-            ).setOrigin(0.5);
-            
-            this.add.text(
-                rowResultX, rowResultY,
-                puzzle.rowResults[row].toString(),
-                { fontSize: `${Math.round(28 * this.gridNumberOpScale)}px`, fontFamily: 'Arial', color: '#ffffff' }
-            ).setOrigin(0.5);
-        }
-        
-        // Add column results (at the bottom of each column)
-        for (let col = 0; col < this.gridSize; col++) {
-            const colResultX = startX + (col * (this.cellSize + this.cellPadding));
-            const colResultY = startY + (this.gridSize * 1.1) * (this.cellSize + this.cellPadding);
-            
-            this.add.text(
-                colResultX, colResultY - this.cellPadding, 
-                '=', 
-                { fontSize: `${Math.round(28 * this.gridNumberOpScale)}px`, fontFamily: 'Arial', color: '#ffffff' }
-            ).setOrigin(0.5);
-            
-            this.add.text(
-                colResultX, colResultY,
-                puzzle.colResults[col].toString(),
-                { fontSize: `${Math.round(28 * this.gridNumberOpScale)}px`, fontFamily: 'Arial', color: '#ffffff' }
-            ).setOrigin(0.5);
-        }
-        
-        // Setup keyboard for number input
-        this.setupNumberInput();
+        this.gridSize
     }
     
     generatePuzzle() {
-        // This generates a valid puzzle according to level difficulty
-        let grid = [];
-        let horizontalOps = [];
-        let verticalOps = [];
-        
-        // Initialize the grid with some numbers
-        for (let row = 0; row < this.gridSize; row++) {
-            grid[row] = [];
-            horizontalOps[row] = [];
-            verticalOps[row] = [];
-            
-            for (let col = 0; col < this.gridSize; col++) {
-                // Start with numbers 1-9
-                grid[row][col] = Phaser.Math.Between(1, 9);
-                
-                // Initialize operations based on level
-                if (col < this.gridSize - 1) {
-                    horizontalOps[row][col] = this.getValidOperation(grid[row][col]);
+        let gridSize = this.size * 2;
+        for(let row = 0; row < gridSize; row++){
+            for(let col = 0; col < gridSize; col++){
+                if(col % 2 === 0){
+                    this.grid[row][col] = getValidNumb(); // Random number between 0-9
                 }
-                
-                if (row < this.gridSize - 1) {
-                    verticalOps[row][col] = this.getValidOperation(grid[row][col]);
+                else{
+                    this.grid[row][col] = getValidOp(); // Random operator
                 }
             }
         }
-        
-        // For level 2, avoid specific multiplications
-        if (this.difficulty === 2) {
-            this.avoidRestrictedMultiplications(grid, horizontalOps, verticalOps);
-        }
-        
-        // For level 3, ensure valid division results (no decimals)
-        if (this.difficulty === 3) {
-            this.ensureValidDivisions(grid, horizontalOps, verticalOps);
-        }
-        
-        // Calculate row and column results based on the grid and operations
-        let rowResults = [];
-        let colResults = [];
-        
-        // Calculate row results
-        for (let row = 0; row < this.gridSize; row++) {
-            rowResults[row] = this.calculateResult(
-                grid[row],
-                horizontalOps[row]
-            );
-        }
-        
-        // Calculate column results
-        for (let col = 0; col < this.gridSize; col++) {
-            const colValues = [];
-            const colOps = [];
-            
-            for (let row = 0; row < this.gridSize; row++) {
-                colValues.push(grid[row][col]);
-                if (row < this.gridSize - 1) {
-                    colOps.push(verticalOps[row][col]);
+        for(let col = 0; col < gridSize; col++){
+            for(let row = 0; row < gridSize; row++){
+                if(row % 2 === 0){
+                    this.grid[row][col] = getValidNumb(); // Random number between 0-9
+                }
+                else{
+                    this.grid[row][col] = getValidOp(); // Random operator
                 }
             }
-            
-            colResults[col] = this.calculateResult(colValues, colOps);
         }
-        
-        // Return the complete puzzle
-        return {
-            grid: grid,
-            horizontalOps: horizontalOps,
-            verticalOps: verticalOps,
-            rowResults: rowResults,
-            colResults: colResults
-        };
-    }
-    
-    getValidOperation(value) {
-        // Get a valid operation based on level
-        let operation;
         let isValid = false;
-        
-        while (!isValid) {
-            // Choose random operation from available ones for this level
-            const opIndex = Phaser.Math.Between(0, this.operators.length - 1);
-            operation = this.operators[opIndex];
-            
-            // For level 2, check if it's a restricted multiplication
-            if (this.difficulty === 2 && operation === '×') {
-                const nextValue = Phaser.Math.Between(1, 9);
-                const multPair = `${value}×${nextValue}`;
-                const reversePair = `${nextValue}×${value}`;
-                
-                if (this.restrictedMultiplications.includes(multPair) || 
-                    this.restrictedMultiplications.includes(reversePair)) {
-                    continue; // Try another operation
-                }
-            }
-    
-            // For level 3, check if division will result in whole number
-            if (this.difficulty === 3 && operation === '÷') {
-                const nextValue = Phaser.Math.Between(1, 9);
-                if (value % nextValue !== 0) {
-                    continue; // Try another operation
-                }
-            }
-            
-            isValid = true;
-        }
-        
-        return operation;
-    }
-    
-    avoidRestrictedMultiplications(grid, horizontalOps, verticalOps) {
-        // Check and fix any restricted multiplications for Level 2
-        for (let row = 0; row < this.gridSize; row++) {
-            for (let col = 0; col < this.gridSize; col++) {
-                // Check horizontal operations
-                if (col < this.gridSize - 1 && horizontalOps[row][col] === '×') {
-                    const val1 = grid[row][col];
-                    const val2 = grid[row][col + 1];
-                    const multPair = `${val1}×${val2}`;
-                    
-                    if (this.restrictedMultiplications.includes(multPair)) {
-                        // Change to addition or subtraction
-                        horizontalOps[row][col] = Phaser.Math.RND.pick(['+', '-']);
-                    }
-                }
-                
-                // Check vertical operations
-                if (row < this.gridSize - 1 && verticalOps[row][col] === '×') {
-                    const val1 = grid[row][col];
-                    const val2 = grid[row + 1][col];
-                    const multPair = `${val1}×${val2}`;
-                    
-                    if (this.restrictedMultiplications.includes(multPair)) {
-                        // Change to addition or subtraction
-                        verticalOps[row][col] = Phaser.Math.RND.pick(['+', '-']);
-                    }
-                }
+        while(!isValid){
+            isValid = this.validateOp();
+            if(!isValid){
+                this.fixOperation();
             }
         }
     }
-    
-    ensureValidDivisions(grid, horizontalOps, verticalOps) {
-        // Ensure division operations result in whole numbers
-        for (let row = 0; row < this.gridSize; row++) {
-            for (let col = 0; col < this.gridSize; col++) {
-                // Check horizontal operations
-                if (col < this.gridSize - 1 && horizontalOps[row][col] === '÷') {
-                    const val1 = grid[row][col];
-                    const val2 = grid[row][col + 1];
-                    
-                    // If division doesn't yield whole number, adjust the second value
-                    if (val1 % val2 !== 0) {
-                        // Find a divisor of val1
-                        for (let i = 1; i <= 9; i++) {
-                            if (val1 % i === 0) {
-                                grid[row][col + 1] = i;
-                                break;
-                            }
-                        }
-                        // If no valid divisor found, change operation
-                        if (val1 % grid[row][col + 1] !== 0) {
-                            horizontalOps[row][col] = Phaser.Math.RND.pick(['+', '-', '×']);
-                        }
-                    }
+
+    getValidNumb(){
+        return Phaser.Math.Between(0, 9);
+    }
+
+    getValidOp(){
+        return Phaser.Math.RND.pick(this.operators);
+    }
+
+    validateOp(){
+        for(let row = 0; row < this.gridSize; row+=2){
+            for(let col = 0; col < this.gridSize; col+=2){
+                let num1 = this.grid[row][col];
+                let op = this.grid[row][col + 1];
+                let num2 = this.grid[row][col + 2];
+                if(!this.isValidOp(num1, op, num2)){
+                    return false;
                 }
-                
-                // Check vertical operations
-                if (row < this.gridSize - 1 && verticalOps[row][col] === '÷') {
-                    const val1 = grid[row][col];
-                    const val2 = grid[row + 1][col];
-                    
-                    // If division doesn't yield whole number, adjust the second value
-                    if (val1 % val2 !== 0) {
-                        // Find a divisor of val1
-                        for (let i = 1; i <= 9; i++) {
-                            if (val1 % i === 0) {
-                                grid[row + 1][col] = i;
-                                break;
-                            }
-                        }
-                        
-                        // If no valid divisor found, change operation
-                        if (val1 % grid[row + 1][col] !== 0) {
-                            verticalOps[row][col] = Phaser.Math.RND.pick(['+', '-', '×']);
-                        }
-                    }
+            }
+        }
+        for(col = 0; col < this.gridSize; col+=2){
+            for(row = 0; row < this.gridSize; row+=2){
+                let num1 = this.grid[row][col];
+                let op = this.grid[row + 1][col];
+                let num2 = this.grid[row + 2][col];
+                if(!this.isValidOp(num1, op, num2)){
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    isValidOp(num1, op, num2){
+        switch(op){
+            case '-':
+                return num1 - num2 >= 0;
+            case 'x':
+                if(this.difficulty === 2){
+                    return this.restrictedMultiplications.includes('${num1}${op}${num2}') === false;  
+                }
+            case '÷':
+                return num1 % num2 === 0;
+            default:
+                return true;
+        }
+    }
+
+    fixOperation(){
+        for(let row = 0; row < this.gridSize; row+=2){
+            for(let col = 0; col < this.gridSize; col+=2){
+                let num1 = this.grid[row][col];
+                let op = this.grid[row][col + 1];
+                let num2 = this.grid[row][col + 2];
+                if(!this.isValidOp(num1, op, num2)){
+                    this.grid[row][col + 2] = this.getValidNumb(); // Replace invalid number with a valid one
+                }
+            }
+        }
+        for(let col = 0; col < this.gridSize; col+=2){
+            for(let row = 0; row < this.gridSize; row+=2){
+                let num1 = this.grid[row][col];
+                let op = this.grid[row + 1][col];
+                let num2 = this.grid[row + 2][col];
+                if(!this.isValidOp(num1, op, num2)){
+                    this.grid[row + 2][col] = this.getValidNumb(); // Replace invalid number with a valid one
                 }
             }
         }
     }
-    
-    calculateResult(values, operations) {
-        // Calculate the result of a sequence of operations
-        // Following order of operations (PEMDAS)
-        
-        // Clone arrays to avoid modifying originals
-        let nums = [...values];
-        let ops = [...operations];
-        
-        // First do multiplication and division
-        for (let i = 0; i < ops.length; i++) {
-            if (ops[i] === '×' || ops[i] === '÷') {
-                if (ops[i] === '×') {
-                    nums[i] = nums[i] * nums[i + 1];
-                } else {
-                    nums[i] = nums[i] / nums[i + 1];
-                }
-                
-                // Remove the used number and operation
-                nums.splice(i + 1, 1);
-                ops.splice(i, 1);
-                i--; // Adjust index since we removed an item
+
+    calculateResults(){
+        for(let row = 0; row < this.gridSize; row+=2){
+            let result = this.grid[row][0];
+            for(let col = 1; col < this.gridSize - 1; col+=2){
+                let operator = this.grid[row][col];
+                let num = this.grid[row][col + 1];
+
+                result = this.calculate(result, operator, num);
             }
+            this.rowResults.push(result);
         }
-        
-        // Then do addition and subtraction
-        let result = nums[0];
-        for (let i = 0; i < ops.length; i++) {
-            if (ops[i] === '+') {
-                result += nums[i + 1];
-            } else if (ops[i] === '-' && result >= nums[i + 1]){
-                result -= nums[i + 1];
+        for(let col = 0; col < this.gridSize; col+=2){
+            let result = this.grid[0][col];
+            for(let row = 1; row < this.gridSize - 1; row+=2){
+                let operator = this.grid[row][col];
+                let num = this.grid[row + 1][col];
+
+                result = this.calculate(result, operator, num);
             }
+            this.colResults.push(result);
         }
-        
-        return Math.round(result); // Ensure whole number result
     }
     
+    calculate(num1, operator, num2){
+        switch(operator){
+            case '+':
+                return num1 + num2;
+            case '-':
+                return num1 - num2;
+            case '×':
+                return num1 * num2;
+            case '÷':
+                return num1 / num2;
+            default:
+                return null;
+        }
+    }
+
     selectCell(row, col) {
         // Handle cell selection for number input
         this.selectedCell = { row, col };
@@ -509,104 +240,5 @@ class Game extends Phaser.Scene{
             const { row, col } = this.selectedCell;
             this.cells[row][col].sprite.setTint(0xffff00); // Yellow tint
         }
-    }
-    
-    setupNumberInput() {
-        // Setup keyboard input for numbers
-        this.input.keyboard.on('keydown', (event) => {
-            // Check if a cell is selected and the key is a number
-            if (this.selectedCell && event.key >= '0' && event.key <= '9') {
-                const { row, col } = this.selectedCell;
-                
-                // Update the cell's value and text
-                this.cells[row][col].value = parseInt(event.key);
-                this.cells[row][col].text.setText(event.key);
-                
-                // Check if the puzzle is complete
-                this.checkPuzzleComplete();
-            }
-        });
-    }
-    
-    checkPuzzleComplete() {
-        // Check if all cells have values
-        let allFilled = true;
-        for (let row = 0; row < this.gridSize; row++) {
-            for (let col = 0; col < this.gridSize; col++) {
-                if (this.cells[row][col].value === null) {
-                    allFilled = false;
-                    break;
-                }
-            }
-        }
-        
-        if (allFilled) {
-            // Check if all rows and columns have correct results
-            let correct = true;
-            
-            // Check rows
-            for (let row = 0; row < this.gridSize; row++) {
-                const rowValues = [];
-                for (let col = 0; col < this.gridSize; col++) {
-                    rowValues.push(this.cells[row][col].value);
-                }
-                
-                const rowOps = this.horizontalOps[row].map(op => op.value);
-                const result = this.calculateResult(rowValues, rowOps);
-                
-                if (result !== this.rowResults[row]) {
-                    correct = false;
-                    break;
-                }
-            }
-            
-            // Check columns
-            if (correct) {
-                for (let col = 0; col < this.gridSize; col++) {
-                    const colValues = [];
-                    const colOps = [];
-                    
-                    for (let row = 0; row < this.gridSize; row++) {
-                        colValues.push(this.cells[row][col].value);
-                        if (row < this.gridSize - 1) {
-                            colOps.push(this.verticalOps[row][col].value);
-                        }
-                    }
-                    
-                    const result = this.calculateResult(colValues, colOps);
-                    
-                    if (result !== this.colResults[col]) {
-                        correct = false;
-                        break;
-                    }
-                }
-            }
-            
-            if (correct) {
-                this.puzzleComplete();
-            }
-        }
-    }
-    
-    puzzleComplete() {
-        // Show success message and handle completion
-        const congratsText = this.add.text(
-            width / 2, height / 2,
-            'Puzzle Complete!',
-            { fontSize: '48px', fontFamily: 'Arial', color: '#ffffff', backgroundColor: '#000000' }
-        ).setOrigin(0.5).setPadding(20);
-        
-        // Add a button to return to menu or go to next level
-        const nextButton = this.add.text(
-            width / 2, height / 2 + 80,
-            'Next Level',
-            { fontSize: '32px', fontFamily: 'Arial', color: '#ffffff', backgroundColor: '#008800' }
-        ).setOrigin(0.5).setPadding(15, 10);
-        
-        nextButton.setInteractive({ useHandCursor: true });
-        nextButton.on('pointerdown', () => {
-            // Go to next level or back to menu
-            this.scene.start('Menu');
-        });
     }
 }
