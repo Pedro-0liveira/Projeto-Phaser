@@ -16,6 +16,7 @@ class Game extends Phaser.Scene{
     init(data){
         this.difficulty = data.difficulty;
         this.size = data.size;
+        this.gridSize = data.size * 2; // Adjusted for the grid size
         switch(this.difficulty) {
             case 1: // Level 1: only addition and subtraction
                 this.operators = ['+', '-'];
@@ -77,14 +78,13 @@ class Game extends Phaser.Scene{
         
     }
     createCrucigrama() {
-        this.gridSize = this.size;
         this.cellSize = 70;
         this.cellPadding = 150;
 
-        if (this.gridSize === 3){
+        if (this.size === 3){
             this.gridScale = 1;
             this.gridNumberOpScale = 2;
-        } else if (this.gridSize === 4){
+        } else if (this.size === 4){
             this.gridScale = 0.8;
             this.gridNumberOpScale = 1.8;
         } else {
@@ -96,8 +96,8 @@ class Game extends Phaser.Scene{
         this.cellPadding *= this.gridScale; // Adjust padding based on grid scale
         
         // Calculate starting position for the grid (center of screen)
-        const gridWidth = ((this.cellSize * this.gridSize) + (this.cellPadding * (this.gridSize - 1)));
-        const gridHeight = ((this.cellSize * this.gridSize) + (this.cellPadding * (this.gridSize - 1)));
+        const gridWidth = ((this.cellSize * this.size) + (this.cellPadding * (this.size - 1)));
+        const gridHeight = ((this.cellSize * this.size) + (this.cellPadding * (this.size - 1)));
 
         
         const startX = (width * 0.66) - (gridWidth / 2);
@@ -105,6 +105,7 @@ class Game extends Phaser.Scene{
         
         // Create the puzzle
         const puzzle = this.generatePuzzle();
+        console.log("puzzle"); // Verifica o puzzle gerado
         /*
         // Adiciona este código para mostrar a solução na consola
         console.log("Solução do Crucigrama:");
@@ -132,17 +133,16 @@ class Game extends Phaser.Scene{
         this.horizontalOps = [];
         this.verticalOps = [];    
         this.rowResults = puzzle.rowResults;
-        console.log("AQUI2");
         this.colResults = puzzle.colResults;
         
         
         // Create the grid cells
-        for (let row = 0; row < this.gridSize; row++) {
+        for (let row = 0; row < this.size; row++) {
             this.cells[row] = [];
             this.horizontalOps[row] = [];
             this.verticalOps[row] = [];
             
-            for (let col = 0; col < this.gridSize; col++) {
+            for (let col = 0; col < this.size; col++) {
                 // Calculate cell position
                 const cellX = startX + (col * (this.cellSize + this.cellPadding));
                 const cellY = startY + (row * (this.cellSize + this.cellPadding));
@@ -171,7 +171,7 @@ class Game extends Phaser.Scene{
                     cell.setInteractive({ useHandCursor: true });
                 }
                 // Add number text (initially empty, player will fill)
-                const textStyle = { fontSize: '24px', fontFamily: 'Arial', color: '#ffffff' };
+                const textStyle = { fontSize: `${Math.round(24 * this.gridNumberOpScale)}px`, fontFamily: 'Arial', color: '#ffffff' };
                 const cellText = this.add.text(cellX, cellY, '', textStyle).setOrigin(0.5);
                 
                 // Store references to cell elements
@@ -188,7 +188,7 @@ class Game extends Phaser.Scene{
                 });
                 
                 // Add horizontal operations (between columns)
-                if (col < this.gridSize - 1) {
+                if (col < this.size - 1) {
                     const opX = cellX + this.cellSize/2 + this.cellPadding/2;
                     const opY = cellY;
                     
@@ -205,7 +205,7 @@ class Game extends Phaser.Scene{
                 }
                 
                 // Add vertical operations (between rows)
-                if (row < this.gridSize - 1) {
+                if (row < this.size - 1) {
                     const opX = cellX;
                     const opY = cellY + this.cellSize/2 + this.cellPadding/2;
                     
@@ -223,7 +223,7 @@ class Game extends Phaser.Scene{
             }
             
             // Add row result (at the end of each row)
-            const rowResultX = startX + (this.gridSize * 1.1) * (this.cellSize + this.cellPadding);
+            const rowResultX = startX + (this.size * 1.1) * (this.cellSize + this.cellPadding);
             const rowResultY = startY + (row * (this.cellSize + this.cellPadding));
 
             
@@ -241,9 +241,9 @@ class Game extends Phaser.Scene{
         }
         
         // Add column results (at the bottom of each column)
-        for (let col = 0; col < this.gridSize; col++) {
+        for (let col = 0; col < this.size; col++) {
             const colResultX = startX + (col * (this.cellSize + this.cellPadding));
-            const colResultY = startY + (this.gridSize * 1.1) * (this.cellSize + this.cellPadding);
+            const colResultY = startY + (this.size * 1.1) * (this.cellSize + this.cellPadding);
             
             this.add.text(
                 colResultX, colResultY - this.cellPadding, 
@@ -260,10 +260,9 @@ class Game extends Phaser.Scene{
     }
     
     generatePuzzle() {
-        let gridSize = this.size * 2;
-        this.grid = Array.from({ length: gridSize }, () => Array(gridSize).fill(0));
-        for(let row = 0; row < gridSize-1; row++){
-            for(let col = 0; col < gridSize; col++){
+        this.grid = Array.from({ length: this.gridSize }, () => Array(this.gridSize).fill(0));
+        for(let row = 0; row < this.gridSize-1; row++){
+            for(let col = 0; col < this.gridSize; col++){
                 if (row % 2 === 1){
                     if (col % 2 === 0){
                         this.grid[row][col] = this.getValidOp(); // Random operator
@@ -280,32 +279,45 @@ class Game extends Phaser.Scene{
                 }
             }
             if (row % 2 === 1){
-                this.grid[row][gridSize - 1] = null; // Last column is an operator
+                this.grid[row][this.gridSize - 1] = null; // Last column is an operator
             } else {
-                this.grid[row][gridSize - 1] = 0; // Last column is a number
+                this.grid[row][this.gridSize - 1] = 0; // Last column is a number
             }
         }
 
-        /*
-        for(let col = 0; col < gridSize; col++){
-            for(let row = 0; row < gridSize; row++){
-                if(row % 2 === 0){
-                    this.grid[row][col] = this.getValidNumb(); // Random number between 0-9
-                }
-                else{
-                    this.grid[row][col] = this.getValidOp(); // Random operator
-                }
-            }
-        }
-        */
         let isValid = false;
         while(!isValid){
+            console.log("Validando o puzzle...");
             isValid = this.validateOp();
             if(!isValid){
+                console.log("Puzzle inválido. Corrigindo...");
                 this.fixOperation();
             }
         }
         this.calculateResults();
+        console.log("Puzzle gerado:", this.grid);
+
+        
+
+        // Inicializar horizontalOps e verticalOps como arrays bidimensionais
+        this.horizontalOps = Array.from({ length: (this.gridSize)/2}, () => Array((this.gridSize - 4)).fill(null));
+        this.verticalOps = Array.from({ length: (this.gridSize - 1)/2 }, () => Array((this.gridSize-4)).fill(null));
+
+        // Preencher horizontalOps
+        for (let row = 0; row < this.gridSize; row += 2) { // Apenas linhas pares
+            for (let col = 1; col < this.gridSize- 1; col += 2) { // Apenas colunas ímpares
+                this.horizontalOps[row / 2][(col - 1) / 2] = this.grid[row][col];
+            }
+        }
+        console.log(this.horizontalOps, "HorizontalOps"); // Verifica a grade antes de validar
+
+        // Preencher verticalOps
+        for (let col = 0; col < this.gridSize; col += 2) { // Apenas colunas pares
+            for (let row = 1; row < this.gridSize- 1; row += 2) { // Apenas linhas ímpares
+                this.verticalOps[(row - 1) / 2][col / 2] = this.grid[row][col];
+            }
+        }
+        console.log(this.verticalOps, "VerticalOps"); // Verifica a grade antes de validar
 
         return {rowResults: this.rowResults, colResults: this.colResults, grid: this.grid, horizontalOps: this.horizontalOps, verticalOps: this.verticalOps};
     }
@@ -318,102 +330,149 @@ class Game extends Phaser.Scene{
         return Phaser.Math.RND.pick(this.operators);
     }
 
-    validateOp(){
-        console.log(this.gridSize, "validateOp"); // Verifica a grade antes de validar
-        for(let row = 0; row < this.gridSize; row+=2){
-            for(let col = 0; col < this.gridSize; col+=2){
-                let num1 = this.grid[row][col];
-                let op = this.grid[row][col + 1];
-                let num2 = this.grid[row][col + 2];
-                if(!this.isValidOp(num1, op, num2)){
+/*
+0: (6) [4, '-', 0, '-', 1, 0]
+1: (6) ['+', null, '+', null, '+', null]
+2: (6) [3, '-', 8, '-', 3, 0]
+3: (6) ['+', null, '-', null, '-', null]
+4: (6) [2, '-', 9, '-', 1, 0]
+5: (6) [0, 0, 0, 0, 0, 0]
+*/
+    validateOp() {
+        // Validar operações horizontais
+        for (let row = 0; row < this.gridSize; row += 2) {
+            let result = this.grid[row][0]; // Começa com o primeiro número da linha
+            for (let col = 1; col < this.gridSize - 1; col += 2) {
+                let op = this.grid[row][col];
+                let num2 = this.grid[row][col + 1];
+
+                if (!this.isValidOp(result, op, num2) || this.calculate(result, op, num2) === 0) {
                     return false;
                 }
+
+                // Atualiza o resultado para a próxima operação
+                result = this.calculate(result, op, num2);
             }
         }
-        for(let col = 0; col < this.gridSize; col+=2){
-            for(let row = 0; row < this.gridSize; row+=2){
-                let num1 = this.grid[row][col];
-                let op = this.grid[row + 1][col];
-                let num2 = this.grid[row + 2][col];
-                if(!this.isValidOp(num1, op, num2)){
-                    return false;
+
+        // Validar operações verticais
+        for (let col = 0; col < this.gridSize; col += 2) {
+            let result = this.grid[0][col]; // Começa com o primeiro número da coluna
+            for (let row = 1; row < this.gridSize - 1; row += 2) {
+                let op = this.grid[row][col];
+                let num2 = this.grid[row + 1][col];
+
+                if (!this.isValidOp(result, op, num2) || this.calculate(result, op, num2) === 0) {
+                   return false;
                 }
+
+                // Atualiza o resultado para a próxima operação
+                result = this.calculate(result, op, num2);
             }
         }
+
         return true;
     }
 
-    isValidOp(num1, op, num2){
-        switch(op){
+    isValidOp(num1, op, num2) {
+        switch (op) {
             case '-':
-                return num1 - num2 >= 0;
-            case 'x':
-                if(this.difficulty === 2){
-                    return this.restrictedMultiplications.includes('${num1}${op}${num2}') === false;  
+                return num1 >= num2; // Garantir que a subtração não resulte em negativo
+            case '×':
+                if (this.difficulty === 2) {
+                    const operation = `${num1}×${num2}`;
+                    return !this.restrictedMultiplications.includes(operation);
                 }
+                return true;
             case '÷':
-                return num1 % num2 === 0;
+                return num2 !== 0 && num1 % num2 === 0; // Evitar divisão por zero e garantir divisibilidade
             default:
                 return true;
         }
     }
-
-    fixOperation(){
-        for(let row = 0; row < this.gridSize; row+=2){
-            for(let col = 0; col < this.gridSize; col+=2){
-                let num1 = this.grid[row][col];
-                let op = this.grid[row][col + 1];
-                let num2 = this.grid[row][col + 2];
-                if(!this.isValidOp(num1, op, num2)){
-                    this.grid[row][col + 2] = this.getValidNumb(); // Replace invalid number with a valid one
+    
+    fixOperation() {
+        // Corrigir operações horizontais
+        for (let row = 0; row < this.gridSize; row += 2) {
+            let result = this.grid[row][0]; // Começa com o primeiro número da linha
+            for (let col = 1; col < this.gridSize - 1; col += 2) {
+                let op = this.grid[row][col];
+                let num2 = this.grid[row][col + 1];
+    
+                if (!this.isValidOp(result, op, num2) || this.calculate(result, op, num2) === 0) {
+                    if (op === '-') {
+                        // Ajustar para evitar resultados negativos ou 0
+                        this.grid[row][col + 1] = Math.min(result - 1, num2);
+                    } else if (op === '÷') {
+                        // Obter divisor válido
+                        this.grid[row][col + 1] = this.getValidDivisor(result);
+                    } else {
+                        // Substituir número inválido
+                        this.grid[row][col + 1] = this.getValidNumb();
+                    }
                 }
+    
+                // Atualiza o resultado para a próxima operação
+                result = this.calculate(result, op, this.grid[row][col + 1]);
             }
         }
-        for(let col = 0; col < this.gridSize; col+=2){
-            for(let row = 0; row < this.gridSize; row+=2){
-                let num1 = this.grid[row][col];
-                let op = this.grid[row + 1][col];
-                let num2 = this.grid[row + 2][col];
-                if(!this.isValidOp(num1, op, num2)){
-                    this.grid[row + 2][col] = this.getValidNumb(); // Replace invalid number with a valid one
+    
+        // Corrigir operações verticais
+        for (let col = 0; col < this.gridSize; col += 2) {
+            let result = this.grid[0][col]; // Começa com o primeiro número da coluna
+            for (let row = 1; row < this.gridSize - 1; row += 2) {
+                let op = this.grid[row][col];
+                let num2 = this.grid[row + 1][col];
+    
+                if (!this.isValidOp(result, op, num2) || this.calculate(result, op, num2) === 0) {
+                    if (op === '-') {
+                        // Ajustar para evitar resultados negativos ou 0
+                        this.grid[row + 1][col] = Math.min(result-1, num2);
+                    } else if (op === '÷') {
+                        // Obter divisor válido
+                        this.grid[row + 1][col] = this.getValidDivisor(result);
+                    } else {
+                        // Substituir número inválido
+                        this.grid[row + 1][col] = this.getValidNumb();
+                    }
                 }
+                // Atualiza o resultado para a próxima operação
+                result = this.calculate(result, op, this.grid[row + 1][col]);
             }
         }
     }
+    
+    getValidDivisor(num) {
+        const divisors = [];
+        for (let i = 1; i <= num; i++) {
+            if (num % i === 0) {
+                divisors.push(i);
+            }
+        }
+        return Phaser.Math.RND.pick(divisors);
+    }
 
     calculateResults(){
-        let gridSize = this.gridSize * 2;
         this.rowResults = [];
         this.colResults = [];
-        console.log(this.gridSize);
-        console.log(this.grid); // Verifica a grade antes de calcular os resultados
-        for(let row = 0; row < gridSize; row+=2){
+
+        for(let row = 0; row < this.gridSize; row+=2){
             let result = this.grid[row][0];
-            //console.log("Row result:", result); // Verifica o valor inicial
-            for(let col = 1; col < gridSize - 1; col+=2){
+            for(let col = 1; col < this.gridSize - 1; col+=2){
                 let operator = this.grid[row][col];
-                //console.log("Operator:", operator); // Verifica o operador
                 let num = this.grid[row][col + 1];
-                //console.log("Num:", num); // Verifica o número
                 result = this.calculate(result, operator, num);
-                //console.log("Row calculation:", result); // Verifica o resultado após cada operação
             }
             this.rowResults.push(result);
-            //console.log(this.rowResults, "Row results FINAL"); // Verifica os resultados finais
         }
-        for(let col = 0; col < gridSize; col+=2){
+        for(let col = 0; col < this.gridSize; col+=2){
             let result = this.grid[0][col];
-            console.log("Col result:", result); // Verifica o valor inicial
-            for(let row = 1; row < gridSize - 1; row+=2){
+            for(let row = 1; row < this.gridSize - 1; row+=2){
                 let operator = this.grid[row][col];
-                console.log("Col operator:", operator); // Verifica o operador
                 let num = this.grid[row + 1][col];
-                console.log("Col num:", num); // Verifica o número
                 result = this.calculate(result, operator, num);
-                console.log("Col calculation:", result); // Verifica o resultado após cada operação
             }
             this.colResults.push(result);
-            console.log(this.colResults, "Col results FINAL"); // Verifica os resultados finais
         }
     }
     
@@ -442,8 +501,8 @@ class Game extends Phaser.Scene{
     
     highlightSelectedCell() {
         // Remove highlight from all cells
-        for (let row = 0; row < this.gridSize; row++) {
-            for (let col = 0; col < this.gridSize; col++) {
+        for (let row = 0; row < this.size; row++) {
+            for (let col = 0; col < this.size; col++) {
                 this.cells[row][col].sprite.setTint(0xffffff); // Reset tint
             }
         }
