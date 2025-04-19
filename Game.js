@@ -22,13 +22,13 @@ class Game extends Phaser.Scene{
                 this.operators = ['+', '-'];
                 break;
             case 2: // Level 2: add, subtract, multiply (with restrictions)
-                this.operators = ['+', '-', '×'];
+                this.operators = ['+', '-', 'X'];
                 this.restrictedMultiplications = [
-                    '7×8', '8×7', '8×8', '8×9', '9×7', '9×8', '9×9'
+                    '7X8', '8X7', '8X8', '8X9', '9X7', '9X8', '9X9'
                 ];
                 break;
             case 3: // Level 3: all operations
-                this.operators = ['+', '-', '×', '÷'];
+                this.operators = ['+', '-', 'X', '÷'];
                 break;
             default:
                 this.operators = ['+', '-'];
@@ -265,16 +265,16 @@ class Game extends Phaser.Scene{
             for(let col = 0; col < this.gridSize; col++){
                 if (row % 2 === 1){
                     if (col % 2 === 0){
-                        this.grid[row][col] = this.getValidOp(); // Random operator
+                        this.grid[row][col] = this.getValidOp(row, col); // Random operator
                     } else {
                         this.grid[row][col] = null;
                     }
                 } else {                    
                     if(col % 2 === 0 && row % 2 === 0){
-                        this.grid[row][col] = this.getValidNumb(); // Random number between 0-9
+                        this.grid[row][col] = this.getValidNumb(row, col); // Random number between 0-9
                     }
                     else{
-                        this.grid[row][col] = this.getValidOp(); // Random operator
+                        this.grid[row][col] = this.getValidOp(row, col); // Random operator
                     }
                 }
             }
@@ -285,7 +285,7 @@ class Game extends Phaser.Scene{
             }
         }
 
-        let isValid = false;
+        let isValid = true;
         while(!isValid){
             console.log("Validando o puzzle...");
             isValid = this.validateOp();
@@ -294,8 +294,8 @@ class Game extends Phaser.Scene{
                 this.fixOperation();
             }
         }
-        this.calculateResults();
         console.log("Puzzle gerado:", this.grid);
+        this.calculateResults();
 
         
 
@@ -322,9 +322,172 @@ class Game extends Phaser.Scene{
         return {rowResults: this.rowResults, colResults: this.colResults, grid: this.grid, horizontalOps: this.horizontalOps, verticalOps: this.verticalOps};
     }
 
-    getValidNumb(){
-        return Phaser.Math.Between(0, 9);
+    getValidNumb(row, col){
+        let maxnum = 9;
+
+        // Checks if we have a - in either the line above or collum to the left
+        let above = row>0 && this.grid[row-1][col] === '-';
+        let behind = col>0 && this.grid[row][col-1] === '-';
+        // Will ensure there are no - which result in numbers bellow 0, to avoid negative numbers
+        if(behind){
+            maxnum = Math.min(this.calcrow(row, col), maxnum);
+            console.log("maxnum atraz", maxnum, this.calcrow(row, col), row, col);
+        }
+        if(above){
+            maxnum = Math.min(this.calccol(row, col), maxnum);
+            console.log("maxnum acima", maxnum, this.calccol(row, col), row, col);
+        }
+        // This restriction only occurs in diff 2
+        if(this.difficulty === 2){
+            // Check if we need to analyse rows above
+            if(row>0 && this.grid[row-1][col] === 'X'){
+                if(this.grid[row-2][col]>=7){
+                    maxnum = Math.min(Math.floor(55/this.grid[row-2][col]), maxnum);
+                    if(row>2 && this.grid[row-3][col] === '-' ){
+                        // Check if there is a - operation prior to the x to ensure that the result of the x operation will not comprimise
+                        // the result of the - operation
+                        maxnum = Math.min(Math.floor(this.calcrow(row-4, col)/this.grid[row-2][col]), maxnum);
+                    }
+                }
+                if(col>0 && this.grid[row][col-1] === 'X'){
+                    if(this.grid[row][col-2]>=7){
+                        maxnum = Math.min(Math.floor(55/this.grid[row][col-2]), maxnum);
+                    } 
+                    if(col>2 && this.grid[row][col-3] === '-' ){
+                        // Check if there is a - operation prior to the x to ensure that the result of the x operation will not comprimise
+                        // the result of the - operation
+                        maxnum = Math.min(Math.floor(this.calccol(row, col-4)/this.grid[row][col-2]), maxnum);
+                    }
+                }
+            }
+        }
+        else if(this.difficulty === 3){
+            // Check if there is a - operation prior to the x to ensure that the result of the x operation will not comprimise
+            // the result of the - operation
+            if(col>3 && this.grid[row][col-3] === '-' && this.grid[row][col-1] === 'X'){
+                maxnum = Math.min(Math.floor((this.calccol(row, col-4)+1)/this.grid[row][col-2]), maxnum);
+            }
+            if(row>3 && this.grid[row-3][col] === '-' && this.grid[row-1][col] === 'X' ){
+                maxnum = Math.min(Math.floor((this.calcrow(row-4, col)+1)/this.grid[row-2][col]), maxnum);
+            }
+        }
+        // Make a list of numbers from 0 to maxnnum
+        let possibleNumbers = [];
+        for(let i = 0; i <= maxnum; i++){
+            possibleNumbers.push(i);
+        }
+        // Check if we have a division in the line above or collum to the left
+        if(this.difficulty === 3){
+            let divabove = row>0 && this.grid[row-1][col] === '÷';
+            let divbehind = col>0 && this.grid[row][col-1] === '÷';
+            if(divabove){
+                // Check if the number is divisible by the number above
+                let dividend = this.checklastmultdivCol(row-2, col);
+                //let dividend = this.grid[row-2][col];
+                possibleNumbers = possibleNumbers.filter(num => dividend % num === 0);
+            }
+            if(divbehind){
+                let dividend = this.checklastmultdivRow(row, col-2);
+                //let dividend = this.grid[row][col-2];
+                possibleNumbers = possibleNumbers.filter(num => dividend % num === 0);
+            }
+        }
+        // Check if we have a multiplication in the line above or collum to the left
+        if(possibleNumbers.length === 0){
+            console.log("No possible numbers, returning 0");
+            possibleNumbers.push(0);
+        }
+        let num = Phaser.Math.RND.pick(possibleNumbers);
+        return num;
     }
+
+    // TO DO , change both of these so that instead of calculating
+    // they simply put the whole row or column in a string so we can calculate it
+    // properly making sure to multiply and divide first, then add and subtract 
+    // DONE
+
+    // Used to calculate the result of all operations up until the - we encountered
+    calcrow(row, col){
+        let expression = this.grid[row].slice(0, col-1);
+        let result = this.calculateVector(expression);
+        return result;
+    }
+
+    // Used to calculate the result of all operations up until the - we encountered
+    calccol(row, col){
+        let expression = [];
+        for (let i = 0; i < row-1; i++) {
+            expression.push(this.grid[i][col]);
+        }
+        let result = this.calculateVector(expression);
+        return result;
+    }
+
+
+    // These functions will help calculate the result of the last sub-equation containing multiplications and divisions
+    checklastmultdivRow(row, col){
+        let result = 0;
+        let expression = this.grid[row].slice(0, col+1);
+        console.log("expression", expression);
+        // We read a string from the back to the front, until we find a + or - operation
+        // We proceed to delete the rest of the string
+        for (let i = expression.length; i >= 0; i--) {
+            if (expression[i] === '-' || expression[i] === '+') {
+                // We found a + or - operation, we can now calculate the result of the last multiplication/division
+                expression = expression.slice(i + 1,expression.length);
+                break;
+            }
+        }
+        result = this.calculateVector(expression);
+        console.log("subExpression", expression, result);
+        return result;
+    }
+    
+    checklastmultdivCol(row, col){
+        let result = 0;
+        let expression = [];
+        for (let i = 0; i < row+1; i++) {
+            expression.push(this.grid[i][col]);
+        }
+        console.log("expression", expression);
+        for (let i = expression.length; i >= 0; i--) {
+            if (expression[i] === '-' || expression[i] === '+') {
+                // We found a + or - operation, we can now calculate the result of the last multiplication/division
+                expression = expression.slice(i + 1,expression.length);
+                break;
+            }
+        }
+        result = this.calculateVector(expression);
+        console.log("subExpression", expression, result);
+        return result;
+    }
+
+    // This function will calculate the result of a list of ints and operators making sure to multiply and divide first    
+    calculateVector(list) {
+        // If there are still calculable operations, do them first
+        if (list.length > 1) {
+            for (let i = 1; i < list.length; i++) {
+                if (list[i] === 'X' || list[i] === '÷') {
+                    let result = this.calculate(list[i - 1], list[i], list[i + 1]);
+                    // console.log("calculateVector", list[i - 1], list[i], list[i + 1], result);
+                    // Replace the operation and its operands with the result
+                    list.splice(i - 1, 3, result);
+                    return this.calculateVector(list); // Recurse with the new list
+                }
+            }
+            // If there are no more multiplication or division operations, do addition and subtraction
+            for (let i = 1; i < list.length; i++) {
+                if (list[i] === '+' || list[i] === '-') {
+                    let result = this.calculate(list[i - 1], list[i], list[i + 1]);
+                    // Replace the operation and its operands with the result
+                    list.splice(i - 1, 3, result);
+                    return this.calculateVector(list); // Recurse with the new list
+                }
+            }
+        }
+        return list[0]; // If only one element, return it
+    }
+
 
     getValidOp(){
         return Phaser.Math.RND.pick(this.operators);
@@ -338,140 +501,20 @@ class Game extends Phaser.Scene{
 4: (6) [2, '-', 9, '-', 1, 0]
 5: (6) [0, 0, 0, 0, 0, 0]
 */
-    validateOp() {
-        // Validar operações horizontais
-        for (let row = 0; row < this.gridSize; row += 2) {
-            let result = this.grid[row][0]; // Começa com o primeiro número da linha
-            for (let col = 1; col < this.gridSize - 1; col += 2) {
-                let op = this.grid[row][col];
-                let num2 = this.grid[row][col + 1];
 
-                if (!this.isValidOp(result, op, num2) || this.calculate(result, op, num2) === 0) {
-                    return false;
-                }
-
-                // Atualiza o resultado para a próxima operação
-                result = this.calculate(result, op, num2);
-            }
-        }
-
-        // Validar operações verticais
-        for (let col = 0; col < this.gridSize; col += 2) {
-            let result = this.grid[0][col]; // Começa com o primeiro número da coluna
-            for (let row = 1; row < this.gridSize - 1; row += 2) {
-                let op = this.grid[row][col];
-                let num2 = this.grid[row + 1][col];
-
-                if (!this.isValidOp(result, op, num2) || this.calculate(result, op, num2) === 0) {
-                   return false;
-                }
-
-                // Atualiza o resultado para a próxima operação
-                result = this.calculate(result, op, num2);
-            }
-        }
-
-        return true;
-    }
-
-    isValidOp(num1, op, num2) {
-        switch (op) {
-            case '-':
-                return num1 >= num2; // Garantir que a subtração não resulte em negativo
-            case '×':
-                if (this.difficulty === 2) {
-                    const operation = `${num1}×${num2}`;
-                    return !this.restrictedMultiplications.includes(operation);
-                }
-                return true;
-            case '÷':
-                return num2 !== 0 && num1 % num2 === 0; // Evitar divisão por zero e garantir divisibilidade
-            default:
-                return true;
-        }
-    }
-    
-    fixOperation() {
-        // Corrigir operações horizontais
-        for (let row = 0; row < this.gridSize; row += 2) {
-            let result = this.grid[row][0]; // Começa com o primeiro número da linha
-            for (let col = 1; col < this.gridSize - 1; col += 2) {
-                let op = this.grid[row][col];
-                let num2 = this.grid[row][col + 1];
-    
-                if (!this.isValidOp(result, op, num2) || this.calculate(result, op, num2) === 0) {
-                    if (op === '-') {
-                        // Ajustar para evitar resultados negativos ou 0
-                        this.grid[row][col + 1] = Math.min(result - 1, num2);
-                    } else if (op === '÷') {
-                        // Obter divisor válido
-                        this.grid[row][col + 1] = this.getValidDivisor(result);
-                    } else {
-                        // Substituir número inválido
-                        this.grid[row][col + 1] = this.getValidNumb();
-                    }
-                }
-    
-                // Atualiza o resultado para a próxima operação
-                result = this.calculate(result, op, this.grid[row][col + 1]);
-            }
-        }
-    
-        // Corrigir operações verticais
-        for (let col = 0; col < this.gridSize; col += 2) {
-            let result = this.grid[0][col]; // Começa com o primeiro número da coluna
-            for (let row = 1; row < this.gridSize - 1; row += 2) {
-                let op = this.grid[row][col];
-                let num2 = this.grid[row + 1][col];
-    
-                if (!this.isValidOp(result, op, num2) || this.calculate(result, op, num2) === 0) {
-                    if (op === '-') {
-                        // Ajustar para evitar resultados negativos ou 0
-                        this.grid[row + 1][col] = Math.min(result-1, num2);
-                    } else if (op === '÷') {
-                        // Obter divisor válido
-                        this.grid[row + 1][col] = this.getValidDivisor(result);
-                    } else {
-                        // Substituir número inválido
-                        this.grid[row + 1][col] = this.getValidNumb();
-                    }
-                }
-                // Atualiza o resultado para a próxima operação
-                result = this.calculate(result, op, this.grid[row + 1][col]);
-            }
-        }
-    }
-    
-    getValidDivisor(num) {
-        const divisors = [];
-        for (let i = 1; i <= num; i++) {
-            if (num % i === 0) {
-                divisors.push(i);
-            }
-        }
-        return Phaser.Math.RND.pick(divisors);
-    }
 
     calculateResults(){
         this.rowResults = [];
         this.colResults = [];
-
-        for(let row = 0; row < this.gridSize; row+=2){
-            let result = this.grid[row][0];
-            for(let col = 1; col < this.gridSize - 1; col+=2){
-                let operator = this.grid[row][col];
-                let num = this.grid[row][col + 1];
-                result = this.calculate(result, operator, num);
-            }
+        let size = this.gridSize/2;
+        console.log("ESTE È O SIZE DA GRID", this.gridSize,size);
+        console.log("calculating results");
+        for (let row = 0; row < size; row++){
+            let result = this.calcrow(row*2, this.gridSize);
             this.rowResults.push(result);
         }
-        for(let col = 0; col < this.gridSize; col+=2){
-            let result = this.grid[0][col];
-            for(let row = 1; row < this.gridSize - 1; row+=2){
-                let operator = this.grid[row][col];
-                let num = this.grid[row + 1][col];
-                result = this.calculate(result, operator, num);
-            }
+        for (let col = 0; col < size; col++){
+            let result = this.calccol(this.gridSize, col*2);
             this.colResults.push(result);
         }
     }
@@ -482,7 +525,7 @@ class Game extends Phaser.Scene{
                 return num1 + num2;
             case '-':
                 return num1 - num2;
-            case '×':
+            case 'X':
                 return num1 * num2;
             case '÷':
                 return num1 / num2;
