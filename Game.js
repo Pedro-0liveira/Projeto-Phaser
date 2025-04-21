@@ -11,7 +11,6 @@ class Game extends Phaser.Scene{
         this.load.image("QuadradoNivel1", "sprites/quadradinho3por3.png");
         this.load.image("QuadradoNivel2", "sprites/quadradinho3por3-2.png");
         this.load.image("QuadradoNivel3", "sprites/quadradinho4por4.png");
-
     }
     init(data){
         this.difficulty = data.difficulty;
@@ -75,8 +74,9 @@ class Game extends Phaser.Scene{
             this.scene.start("Menu");
         });
         this.createCrucigrama();
-        
+        this.createVirtualKeyboard();    
     }
+
     createCrucigrama() {
         this.cellSize = 70;
         this.cellPadding = 150;
@@ -258,6 +258,67 @@ class Game extends Phaser.Scene{
             ).setOrigin(0.5);
         }
     }
+
+    createVirtualKeyboard(){
+        const buttonSize = 100;
+        const buttonPadding = 20;
+        const keyboardX = game.config.width * 0.15;
+        const keyboardY = game.config.height * 0.35;
+    
+        const numbers = [
+            [1,2,3],
+            [4,5,6],
+            [7,8,9],
+            [0]
+        ];
+    
+        let buttonX;
+        let buttonY;
+        
+        for (let row = 0; row < numbers.length; row++){
+            for (let col = 0; col < numbers[row].length; col++){
+                if (row === 3){
+                    buttonX = keyboardX + (col * (buttonSize + buttonPadding)) + 120;
+                    buttonY = keyboardY + (row * (buttonSize + buttonPadding));
+                } else {
+                    buttonX = keyboardX + col * (buttonSize + buttonPadding);
+                    buttonY = keyboardY + row * (buttonSize + buttonPadding);
+                }
+                
+                const buttonTextStyle = { fontSize: `${Math.round(28 * this.gridNumberOpScale)}px`, fontFamily: 'Arial', color: '#ffffff' };
+                const numberButton = this.add.rectangle(buttonX, buttonY, buttonSize, buttonSize, 0x0000ff).setInteractive({ useHandCursor: true });
+                const numberButtonText = this.add.text(buttonX, buttonY, numbers[row][col], buttonTextStyle).setOrigin(0.5);
+    
+                // Corrigido: usar o valor do botão (numbers[row][col]) em vez da posição
+                numberButton.on('pointerdown', () => {
+                    if (this.selectedCell) {
+                        const { row: cellRow, col: cellCol } = this.selectedCell;
+                        const cell = this.cells[cellRow][cellCol];
+                        cell.value = numbers[row][col]; // Usar o valor do botão clicado
+                        cell.text.setText(cell.value.toString());
+                        console.log("Valor definido:", cell.value);
+                    }
+                });
+            }
+        }
+    
+        // Criar botão de delete (fora do loop dos números)
+        const deleteButtonX = keyboardX + (2 * (buttonSize + buttonPadding));
+        const deleteButtonY = keyboardY + (3 * (buttonSize + buttonPadding));
+        
+        const deleteButton = this.add.rectangle(deleteButtonX, deleteButtonY, buttonSize, buttonSize, 0xff0000).setInteractive({ useHandCursor: true });
+        const deleteButtonTextStyle = { fontSize: `${Math.round(14 * this.gridNumberOpScale)}px`, fontFamily: 'Arial', color: '#ffffff' };
+        const deleteButtonText = this.add.text(deleteButtonX, deleteButtonY, 'X', deleteButtonTextStyle).setOrigin(0.5);
+    
+        deleteButton.on('pointerdown', () => {
+            if (this.selectedCell) {
+                const { row, col } = this.selectedCell;
+                const cell = this.cells[row][col];
+                cell.value = null;
+                cell.text.setText('');
+            }
+        });
+    }
     
     generatePuzzle() {
         this.grid = Array.from({ length: this.gridSize }, () => Array(this.gridSize).fill(0));
@@ -296,8 +357,6 @@ class Game extends Phaser.Scene{
         }
         console.log("Puzzle gerado:", this.grid);
         this.calculateResults();
-
-        
 
         // Inicializar horizontalOps e verticalOps como arrays bidimensionais
         this.horizontalOps = Array.from({ length: (this.gridSize)/2}, () => Array((this.gridSize - 4)).fill(null));
