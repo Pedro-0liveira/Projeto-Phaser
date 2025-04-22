@@ -337,145 +337,267 @@ class Game extends Phaser.Scene{
     }
     
     generatePuzzle() {
-        this.grid = Array.from({ length: this.gridSize }, () => Array(this.gridSize).fill(0));
-        for(let row = 0; row < this.gridSize-1; row++){
-            for(let col = 0; col < this.gridSize; col++){
-                if (row % 2 === 1){
-                    if (col % 2 === 0){
-                        this.grid[row][col] = this.getValidOp(row, col); // Random operator
-                    } else {
-                        this.grid[row][col] = null;
-                    }
-                } else {                    
-                    if(col % 2 === 0 && row % 2 === 0){
-                        this.grid[row][col] = this.getValidNumb(row, col); // Random number between 0-9
-                    }
-                    else{
-                        this.grid[row][col] = this.getValidOp(row, col); // Random operator
+        let attempts = 0;
+        const maxAttempts = 100; // Prevent infinite loops
+        let validPuzzleGenerated = false;
+        
+        while (!validPuzzleGenerated && attempts < maxAttempts) {
+            attempts++;
+            
+            this.grid = Array.from({ length: this.gridSize }, () => Array(this.gridSize).fill(0));
+            
+            // Fill the grid with numbers and operators
+            for(let row = 0; row < this.gridSize-1; row++){
+                for(let col = 0; col < this.gridSize; col++){
+                    if (row % 2 === 1){
+                        if (col % 2 === 0){
+                            this.grid[row][col] = this.getValidOp(row, col); // Random operator
+                        } else {
+                            this.grid[row][col] = null;
+                        }
+                    } else {                    
+                        if(col % 2 === 0 && row % 2 === 0){
+                            this.grid[row][col] = this.getValidNumb(row, col); // Random number between 0-9
+                        }
+                        else{
+                            this.grid[row][col] = this.getValidOp(row, col); // Random operator
+                        }
                     }
                 }
+                if (row % 2 === 1){
+                    this.grid[row][this.gridSize - 1] = null; // Last column is an operator
+                } else {
+                    this.grid[row][this.gridSize - 1] = 0; // Last column is a number
+                }
             }
-            if (row % 2 === 1){
-                this.grid[row][this.gridSize - 1] = null; // Last column is an operator
-            } else {
-                this.grid[row][this.gridSize - 1] = 0; // Last column is a number
+    
+            // Validate the generated puzzle
+            validPuzzleGenerated = this.validatePuzzle();
+            
+            if(validPuzzleGenerated) {
+                this.calculateResults();
+                
+                // Verify all results are finite integers
+                let allResultsValid = true;
+                for(let i = 0; i < this.rowResults.length; i++) {
+                    if(!isFinite(this.rowResults[i]) || Math.floor(this.rowResults[i]) !== this.rowResults[i]) {
+                        allResultsValid = false;
+                        break;
+                    }
+                }
+                
+                for(let i = 0; i < this.colResults.length; i++) {
+                    if(!isFinite(this.colResults[i]) || Math.floor(this.colResults[i]) !== this.colResults[i]) {
+                        allResultsValid = false;
+                        break;
+                    }
+                }
+                
+                validPuzzleGenerated = allResultsValid;
             }
+            
+            console.log(`Attempt ${attempts}: Puzzle ${validPuzzleGenerated ? 'valid' : 'invalid'}`);
         }
-
-        let isValid = true;
-        while(!isValid){
-            console.log("Validando o puzzle...");
-            isValid = this.validateOp();
-            if(!isValid){
-                console.log("Puzzle inválido. Corrigindo...");
-                this.fixOperation();
-            }
+        
+        if (!validPuzzleGenerated) {
+            console.error("Failed to generate a valid puzzle after", maxAttempts, "attempts");
+            // Fallback to a simple puzzle with only addition
+            this.fallbackSimplePuzzle();
         }
-        console.log("Puzzle gerado:", this.grid);
-        this.calculateResults();
-
-        // Inicializar horizontalOps e verticalOps como arrays bidimensionais
+        
+        console.log("Final puzzle generated:", this.grid);
+        
+        // Initialize horizontalOps and verticalOps
         this.horizontalOps = Array.from({ length: (this.gridSize)/2}, () => Array((this.gridSize - 4)).fill(null));
         this.verticalOps = Array.from({ length: (this.gridSize - 1)/2 }, () => Array((this.gridSize-4)).fill(null));
-
-        // Preencher horizontalOps
-        for (let row = 0; row < this.gridSize; row += 2) { // Apenas linhas pares
-            for (let col = 1; col < this.gridSize- 1; col += 2) { // Apenas colunas ímpares
+    
+        // Fill horizontalOps
+        for (let row = 0; row < this.gridSize; row += 2) { // Even rows
+            for (let col = 1; col < this.gridSize- 1; col += 2) { // Odd columns
                 this.horizontalOps[row / 2][(col - 1) / 2] = this.grid[row][col];
             }
         }
-        console.log(this.horizontalOps, "HorizontalOps"); // Verifica a grade antes de validar
-
-        // Preencher verticalOps
-        for (let col = 0; col < this.gridSize; col += 2) { // Apenas colunas pares
-            for (let row = 1; row < this.gridSize- 1; row += 2) { // Apenas linhas ímpares
+    
+        // Fill verticalOps
+        for (let col = 0; col < this.gridSize; col += 2) { // Even columns
+            for (let row = 1; row < this.gridSize- 1; row += 2) { // Odd rows
                 this.verticalOps[(row - 1) / 2][col / 2] = this.grid[row][col];
             }
         }
-        console.log(this.verticalOps, "VerticalOps"); // Verifica a grade antes de validar
-
-        return {rowResults: this.rowResults, colResults: this.colResults, grid: this.grid, horizontalOps: this.horizontalOps, verticalOps: this.verticalOps};
+    
+        return {
+            rowResults: this.rowResults, 
+            colResults: this.colResults, 
+            grid: this.grid, 
+            horizontalOps: this.horizontalOps, 
+            verticalOps: this.verticalOps
+        };
     }
 
-    getValidNumb(row, col){
-        let maxnum = 9;
-
-        // Checks if we have a - in either the line above or collum to the left
-        let above = row>0 && this.grid[row-1][col] === '-';
-        let behind = col>0 && this.grid[row][col-1] === '-';
-        // Will ensure there are no - which result in numbers bellow 0, to avoid negative numbers
-        if(behind){
-            maxnum = Math.min(this.calcrow(row, col), maxnum);
-            console.log("maxnum atraz", maxnum, this.calcrow(row, col), row, col);
-        }
-        if(above){
-            maxnum = Math.min(this.calccol(row, col), maxnum);
-            console.log("maxnum acima", maxnum, this.calccol(row, col), row, col);
-        }
-        // This restriction only occurs in diff 2
-        if(this.difficulty === 2){
-            // Check if we need to analyse rows above
-            if(row>0 && this.grid[row-1][col] === 'X'){
-                if(this.grid[row-2][col]>=7){
-                    maxnum = Math.min(Math.floor(55/this.grid[row-2][col]), maxnum);
-                    if(row>2 && this.grid[row-3][col] === '-' ){
-                        // Check if there is a - operation prior to the x to ensure that the result of the x operation will not comprimise
-                        // the result of the - operation
-                        maxnum = Math.min(Math.floor(this.calcrow(row-4, col)/this.grid[row-2][col]), maxnum);
+    fallbackSimplePuzzle() {
+        // Create a simple puzzle with only addition and small numbers
+        for(let row = 0; row < this.gridSize; row += 2) {
+            for(let col = 0; col < this.gridSize; col += 2) {
+                if (col < this.gridSize - 1 && row < this.gridSize - 1) {
+                    this.grid[row][col] = Phaser.Math.Between(1, 3); // Small positive numbers
+                    
+                    // Put '+' for all operators
+                    if (col < this.gridSize - 2) {
+                        this.grid[row][col+1] = '+';
+                    }
+                    if (row < this.gridSize - 2) {
+                        this.grid[row+1][col] = '+';
                     }
                 }
-                if(col>0 && this.grid[row][col-1] === 'X'){
-                    if(this.grid[row][col-2]>=7){
-                        maxnum = Math.min(Math.floor(55/this.grid[row][col-2]), maxnum);
-                    } 
-                    if(col>2 && this.grid[row][col-3] === '-' ){
-                        // Check if there is a - operation prior to the x to ensure that the result of the x operation will not comprimise
+            }
+        }
+        
+        // Calculate results for this simple puzzle
+        this.calculateResults();
+        
+        // Verify no negative results
+        let foundNegative = false;
+        for (let i = 0; i < this.rowResults.length; i++) {
+            if (this.rowResults[i] < 0) {
+                foundNegative = true;
+                this.rowResults[i] = 0;
+            }
+        }
+        
+        for (let i = 0; i < this.colResults.length; i++) {
+            if (this.colResults[i] < 0) {
+                foundNegative = true;
+                this.colResults[i] = 0;
+            }
+        }
+        
+        if (foundNegative) {
+            console.warn("Negative results found in fallback puzzle. Results adjusted to 0.");
+        }
+    }
+    
+    getValidNumb(row, col){
+        let maxnum = 9;
+        let minnum = 0;
+    
+        // Checks if we have a - in either the line above or column to the left
+        let above = row > 0 && this.grid[row-1][col] === '-';
+        let behind = col > 0 && this.grid[row][col-1] === '-';
+        
+        // Will ensure there are no - which result in numbers below 0, to avoid negative numbers
+        if(behind){
+            // If there's a subtraction to the left, the current number must be <= previous result
+            const prevResult = this.calcrow(row, col);
+            maxnum = Math.min(prevResult, maxnum);
+            
+            if(maxnum < 0) {
+                console.log("Warning: Preventing negative result from subtraction (left)");
+                maxnum = 0; // Clamp to ensure we don't generate negative numbers
+            }
+        }
+        
+        if(above){
+            // If there's a subtraction above, the current number must be <= previous column result
+            const prevResult = this.calccol(row, col);
+            maxnum = Math.min(prevResult, maxnum);
+            
+            if(maxnum < 0) {
+                console.log("Warning: Preventing negative result from subtraction (above)");
+                maxnum = 0; // Clamp to ensure we don't generate negative numbers
+            }
+        }
+        
+        // This restriction only occurs in diff 2
+        if(this.difficulty === 2){
+            if(row > 0 && this.grid[row-1][col] === 'X'){
+                if(this.grid[row-2][col] >= 7){
+                    maxnum = Math.min(Math.floor(55/this.grid[row-2][col]), maxnum);
+                    if(row > 2 && this.grid[row-3][col] === '-'){
+                        // Check if there is a - operation prior to the x to ensure that the result of the x operation will not compromise
                         // the result of the - operation
-                        maxnum = Math.min(Math.floor(this.calccol(row, col-4)/this.grid[row][col-2]), maxnum);
+                        const prevResult = this.calcrow(row-4, col);
+                        maxnum = Math.min(Math.floor(prevResult/this.grid[row-2][col]), maxnum);
+                        
+                        if(maxnum < 0) maxnum = 0;
+                    }
+                }
+                
+                if(col > 0 && this.grid[row][col-1] === 'X'){
+                    if(this.grid[row][col-2] >= 7){
+                        maxnum = Math.min(Math.floor(55/this.grid[row][col-2]), maxnum);
+                    }
+                    
+                    if(col > 2 && this.grid[row][col-3] === '-'){
+                        // Check if there is a - operation prior to the x to ensure that the result of the x operation will not compromise
+                        // the result of the - operation
+                        const prevResult = this.calccol(row, col-4);
+                        maxnum = Math.min(Math.floor(prevResult/this.grid[row][col-2]), maxnum);
+                        
+                        if(maxnum < 0) maxnum = 0;
                     }
                 }
             }
         }
         else if(this.difficulty === 3){
-            // Check if there is a - operation prior to the x to ensure that the result of the x operation will not comprimise
-            // the result of the - operation
-            if(col>3 && this.grid[row][col-3] === '-' && this.grid[row][col-1] === 'X'){
-                maxnum = Math.min(Math.floor((this.calccol(row, col-4)+1)/this.grid[row][col-2]), maxnum);
+            if(col > 3 && this.grid[row][col-3] === '-' && this.grid[row][col-1] === 'X'){
+                const prevResult = this.calccol(row, col-4);
+                maxnum = Math.min(Math.floor((prevResult+1)/this.grid[row][col-2]), maxnum);
+                
+                if(maxnum < 0) maxnum = 0;
             }
-            if(row>3 && this.grid[row-3][col] === '-' && this.grid[row-1][col] === 'X' ){
-                maxnum = Math.min(Math.floor((this.calcrow(row-4, col)+1)/this.grid[row-2][col]), maxnum);
+            
+            if(row > 3 && this.grid[row-3][col] === '-' && this.grid[row-1][col] === 'X'){
+                const prevResult = this.calcrow(row-4, col);
+                maxnum = Math.min(Math.floor((prevResult+1)/this.grid[row-2][col]), maxnum);
+                
+                if(maxnum < 0) maxnum = 0;
             }
         }
-        // Make a list of numbers from 0 to maxnnum
+        
+        // Ensure maxnum is never negative
+        maxnum = Math.max(0, maxnum);
+        
+        // Make a list of numbers from 0 to maxnum
         let possibleNumbers = [];
         for(let i = 0; i <= maxnum; i++){
             possibleNumbers.push(i);
         }
-        // Check if we have a division in the line above or collum to the left
+        
+        // Handle division operations to prevent infinite decimals
         if(this.difficulty === 3){
-            let divabove = row>0 && this.grid[row-1][col] === '÷';
-            let divbehind = col>0 && this.grid[row][col-1] === '÷';
+            let divabove = row > 0 && this.grid[row-1][col] === '÷';
+            let divbehind = col > 0 && this.grid[row][col-1] === '÷';
+            
             if(divabove){
                 // Check if the number is divisible by the number above
                 let dividend = this.checklastmultdivCol(row-2, col);
-                //let dividend = this.grid[row-2][col];
-                possibleNumbers = possibleNumbers.filter(num => dividend % num === 0);
+                
+                // Filter for numbers that can cleanly divide the dividend (avoid 0)
+                possibleNumbers = possibleNumbers.filter(num => num > 0 && dividend % num === 0);
             }
+            
             if(divbehind){
                 let dividend = this.checklastmultdivRow(row, col-2);
-                //let dividend = this.grid[row][col-2];
-                possibleNumbers = possibleNumbers.filter(num => dividend % num === 0);
+                
+                // Filter for numbers that can cleanly divide the dividend (avoid 0)
+                possibleNumbers = possibleNumbers.filter(num => num > 0 && dividend % num === 0);
             }
         }
-        // Check if we have a multiplication in the line above or collum to the left
+        
+        // If no possible numbers left (could happen with division constraints)
         if(possibleNumbers.length === 0){
-            console.log("No possible numbers, returning 0");
-            possibleNumbers.push(0);
+            console.log("No possible numbers with current constraints. Using fallback.");
+            // Fallback to numbers that won't cause problems 
+            if(this.difficulty === 3 && (row > 0 && this.grid[row-1][col] === '÷' || col > 0 && this.grid[row][col-1] === '÷')){
+                return 1; // Safest divisor that won't cause infinity
+            } else {
+                return 0;
+            }
         }
+        
         let num = Phaser.Math.RND.pick(possibleNumbers);
         return num;
     }
-
     // TO DO , change both of these so that instead of calculating
     // they simply put the whole row or column in a string so we can calculate it
     // properly making sure to multiply and divide first, then add and subtract 
@@ -539,29 +661,49 @@ class Game extends Phaser.Scene{
 
     // This function will calculate the result of a list of ints and operators making sure to multiply and divide first    
     calculateVector(list) {
-        // If there are still calculable operations, do them first
-        if (list.length > 1) {
-            for (let i = 1; i < list.length; i++) {
-                if (list[i] === 'X' || list[i] === '÷') {
-                    let result = this.calculate(list[i - 1], list[i], list[i + 1]);
-                    // console.log("calculateVector", list[i - 1], list[i], list[i + 1], result);
-                    // Replace the operation and its operands with the result
-                    list.splice(i - 1, 3, result);
-                    return this.calculateVector(list); // Recurse with the new list
+        if (list.length === 0) return 0;
+        if (list.length === 1) return list[0];
+        
+        // Make a copy to avoid modifying the original
+        let calcList = [...list];
+        
+        // First pass: handle multiplication and division
+        for (let i = 1; i < calcList.length - 1; i += 2) {
+            if (calcList[i] === 'X' || calcList[i] === '÷') {
+                // For division, ensure we're not dividing by zero
+                if (calcList[i] === '÷' && calcList[i+1] === 0) {
+                    console.error("Division by zero detected!");
+                    calcList[i+1] = 1; // Replace with safe value
                 }
-            }
-            // If there are no more multiplication or division operations, do addition and subtraction
-            for (let i = 1; i < list.length; i++) {
-                if (list[i] === '+' || list[i] === '-') {
-                    let result = this.calculate(list[i - 1], list[i], list[i + 1]);
-                    // Replace the operation and its operands with the result
-                    list.splice(i - 1, 3, result);
-                    return this.calculateVector(list); // Recurse with the new list
+                
+                // For division, ensure we get an integer result
+                if (calcList[i] === '÷' && calcList[i-1] % calcList[i+1] !== 0) {
+                    console.error("Non-integer division:", calcList[i-1], "÷", calcList[i+1]);
+                    // Adjust the dividend to ensure clean division
+                    calcList[i-1] = calcList[i+1] * Math.floor(calcList[i-1] / calcList[i+1]);
                 }
+                
+                let result = this.calculate(calcList[i-1], calcList[i], calcList[i+1]);
+                calcList.splice(i-1, 3, result);
+                i -= 2; // Adjust index after splicing
             }
         }
-        return list[0]; // If only one element, return it
+        
+        // Second pass: handle addition and subtraction with negative number prevention
+        let result = calcList[0];
+        for (let i = 1; i < calcList.length - 1; i += 2) {
+            if (calcList[i] === '-' && result < calcList[i+1]) {
+                // This would result in a negative number, so adjust
+                console.warn("Preventing negative result:", result, "-", calcList[i+1]);
+                calcList[i+1] = result; // Make subtraction result in 0
+            }
+            result = this.calculate(result, calcList[i], calcList[i+1]);
+        }
+        
+        // Ensure final result is not negative
+        return Math.max(0, result);
     }
+    
 
 
     getValidOp(){
@@ -595,18 +737,113 @@ class Game extends Phaser.Scene{
     }
     
     calculate(num1, operator, num2){
+        let result;
+        
         switch(operator){
             case '+':
-                return num1 + num2;
+                result = num1 + num2;
+                break;
             case '-':
-                return num1 - num2;
+                result = num1 - num2;
+                // Ensure subtraction never results in negative values
+                if (result < 0) {
+                    console.warn("Negative result from subtraction detected:", num1, "-", num2);
+                    result = 0;
+                }
+                break;
             case 'X':
-                return num1 * num2;
+                result = num1 * num2;
+                break;
             case '÷':
-                return num1 / num2;
+                // Avoid division by zero
+                if(num2 === 0) {
+                    console.warn("Division by zero prevented");
+                    return 0;
+                }
+                
+                // Ensure division results in an integer
+                if(num1 % num2 !== 0) {
+                    console.warn("Non-integer division:", num1, "÷", num2);
+                    // Return the floor of the division to avoid decimals
+                    result = Math.floor(num1 / num2);
+                } else {
+                    result = num1 / num2;
+                }
+                break;
             default:
-                return null;
+                result = 0;
         }
+        
+        // Final safety check to prevent any negative values
+        return Math.max(0, result);
+    }
+
+    validatePuzzle() {
+        // First, check all division operations as before
+        for (let row = 0; row < this.gridSize; row++) {
+            for (let col = 0; col < this.gridSize; col++) {
+                if (this.grid[row][col] === '÷') {
+                    // Check the operands for this division
+                    let leftOperand, rightOperand;
+                    
+                    // For horizontal divisions
+                    if (col > 0 && col < this.gridSize - 1 && row % 2 === 0) {
+                        leftOperand = this.grid[row][col-1];
+                        rightOperand = this.grid[row][col+1];
+                        
+                        // Avoid division by zero and ensure clean division
+                        if (rightOperand === 0 || leftOperand % rightOperand !== 0) {
+                            return false;
+                        }
+                    }
+                    
+                    // For vertical divisions
+                    if (row > 0 && row < this.gridSize - 1 && col % 2 === 0) {
+                        leftOperand = this.grid[row-1][col];
+                        rightOperand = this.grid[row+1][col];
+                        
+                        // Avoid division by zero and ensure clean division
+                        if (rightOperand === 0 || leftOperand % rightOperand !== 0) {
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Now check for negative subtraction results
+        for (let row = 0; row < this.gridSize; row++) {
+            for (let col = 0; col < this.gridSize; col++) {
+                if (this.grid[row][col] === '-') {
+                    // Check the operands for this subtraction
+                    let leftOperand, rightOperand;
+                    
+                    // For horizontal subtractions
+                    if (col > 0 && col < this.gridSize - 1 && row % 2 === 0) {
+                        leftOperand = this.grid[row][col-1];
+                        rightOperand = this.grid[row][col+1];
+                        
+                        // Ensure subtraction doesn't result in negative numbers
+                        if (leftOperand < rightOperand) {
+                            return false;
+                        }
+                    }
+                    
+                    // For vertical subtractions
+                    if (row > 0 && row < this.gridSize - 1 && col % 2 === 0) {
+                        leftOperand = this.grid[row-1][col];
+                        rightOperand = this.grid[row+1][col];
+                        
+                        // Ensure subtraction doesn't result in negative numbers
+                        if (leftOperand < rightOperand) {
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+        
+        return true;
     }
 
     selectCell(row, col) {
