@@ -11,7 +11,10 @@ class Game extends Phaser.Scene{
         this.load.image("QuadradoNivel1", "sprites/quadradinho3por3.png");
         this.load.image("QuadradoNivel2", "sprites/quadradinho3por3-2.png");
         this.load.image("QuadradoNivel3", "sprites/quadradinho4por4.png");
+        this.load.image("Maximizar", "sprites/fullscreen-bt-1.png");
+        this.load.image("Minimizar", "sprites/fullscreen-bt-2.png");
     }
+    
     init(data){
         this.difficulty = data.difficulty;
         this.size = data.size;
@@ -73,6 +76,19 @@ class Game extends Phaser.Scene{
         this.voltarBT.on('pointerdown', () => {
             this.scene.start("Menu");
         });
+
+        this.maxBT.on('pointerdown', () => {
+            this.scale.startFullscreen();
+            this.maxBT.visible = false;
+            this.minBT.visible = true;
+        });
+        
+        this.minBT.on('pointerdown', () => {
+            this.scale.stopFullscreen();
+            this.maxBT.visible = true;
+            this.minBT.visible = false;
+        });
+
         this.createCrucigrama();
         this.createVirtualKeyboard();    
     }
