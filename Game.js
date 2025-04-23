@@ -13,6 +13,17 @@ class Game extends Phaser.Scene{
         this.load.image("QuadradoNivel3", "sprites/quadradinho4por4.png");
         this.load.image("Maximizar", "sprites/fullscreen-bt-1.png");
         this.load.image("Minimizar", "sprites/fullscreen-bt-2.png");
+        this.load.image("Number0", "sprites/number0.png");
+        this.load.image("Number1", "sprites/number1.png");
+        this.load.image("Number2", "sprites/number2.png");
+        this.load.image("Number3", "sprites/number3.png");
+        this.load.image("Number4", "sprites/number4.png");
+        this.load.image("Number5", "sprites/number5.png");
+        this.load.image("Number6", "sprites/number6.png");
+        this.load.image("Number7", "sprites/number7.png");
+        this.load.image("Number8", "sprites/number8.png");
+        this.load.image("Number9", "sprites/number9.png");
+        this.load.image("Apagar", "sprites/apagarnumber.png");
     }
     
     init(data){
@@ -301,9 +312,8 @@ class Game extends Phaser.Scene{
                     buttonY = keyboardY + row * (buttonSize + buttonPadding);
                 }
                 
+                const numberButton = this.add.image(buttonX, buttonY, "Number" + numbers[row][col]).setScale(0.5).setInteractive({ useHandCursor: true });
                 const buttonTextStyle = { fontSize: `${Math.round(28 * this.gridNumberOpScale)}px`, fontFamily: 'Arial', color: '#ffffff' };
-                const numberButton = this.add.rectangle(buttonX, buttonY, buttonSize, buttonSize, 0x0000ff).setInteractive({ useHandCursor: true });
-                const numberButtonText = this.add.text(buttonX, buttonY, numbers[row][col], buttonTextStyle).setOrigin(0.5);
     
                 // Corrigido: usar o valor do botão (numbers[row][col]) em vez da posição
                 numberButton.on('pointerdown', () => {
@@ -322,10 +332,9 @@ class Game extends Phaser.Scene{
         const deleteButtonX = keyboardX + (2 * (buttonSize + buttonPadding));
         const deleteButtonY = keyboardY + (3 * (buttonSize + buttonPadding));
         
-        const deleteButton = this.add.rectangle(deleteButtonX, deleteButtonY, buttonSize, buttonSize, 0xff0000).setInteractive({ useHandCursor: true });
+        const deleteButton = this.add.image(deleteButtonX, deleteButtonY, "Apagar").setScale(0.5).setInteractive({ useHandCursor: true });
         const deleteButtonTextStyle = { fontSize: `${Math.round(14 * this.gridNumberOpScale)}px`, fontFamily: 'Arial', color: '#ffffff' };
-        const deleteButtonText = this.add.text(deleteButtonX, deleteButtonY, 'X', deleteButtonTextStyle).setOrigin(0.5);
-    
+       
         deleteButton.on('pointerdown', () => {
             if (this.selectedCell) {
                 const { row, col } = this.selectedCell;
