@@ -25,6 +25,8 @@
                 <script src="phaser.js"></script>
                 <script src="Menu.js"></script>
                 <script src="Game.js"></script>
+                <script src="Creditos.js"></script>
+                <script src="Info.js"></script>
             </div>
         </body>
 </html>
@@ -49,7 +51,7 @@
         backgroundColor: "#ffffff",
         parent: 'divId',
         fullscreenTarget: 'divId',
-        scene: [Menu, Game],
+        scene: [Menu, Game, Creditos, Info],
     }
     var game = new Phaser.Game(config);
 </script>

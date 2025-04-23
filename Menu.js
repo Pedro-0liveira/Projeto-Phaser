@@ -21,7 +21,6 @@ class Menu extends Phaser.Scene{
         this.load.image("Nivel 3", "sprites/bt_4por4-3ou4ano.png");
         this.load.image("Creditos", "sprites/bt_creditos.png");
         this.load.image("Info", "sprites/bt_info.png");
-        this.load.image("Top", "sprites/bt_top.png");
         this.load.image("Maximizar", "sprites/fullscreen-bt-1.png");
         this.load.image("Minimizar", "sprites/fullscreen-bt-2.png");
         this.load.image("Login", "sprites/login-bt.png");
@@ -32,7 +31,7 @@ class Menu extends Phaser.Scene{
         this.load.image("Tamanho 5x5", "sprites/bt_5por5.png");
 
         //temp backbutton
-        this.load.image("Voltar", "sprites/bt_fechar.png");
+        this.load.image("Voltar", "sprites/quadradoback.png");
     }
     create(){
         width = game.config.width;
@@ -86,9 +85,11 @@ class Menu extends Phaser.Scene{
         this.tam5BT.setInteractive({ useHandCursor: true });
 
         //Botao Top
+        /*
         this.topBT = this.add.image(width * 0.24, height * 0.85, "Top");
         this.topBT.setScale(scale);
         this.topBT.setInteractive({ useHandCursor: true });
+        */
 
         //Botao Info
         this.infoBT = this.add.image(width * 0.16, height * 0.89, "Info");
@@ -117,9 +118,9 @@ class Menu extends Phaser.Scene{
         this.minBT.setInteractive({ useHandCursor: true });
 
         //Botao voltar (TEMP)
-        this.voltarBT = this.add.image(width * 0.32, height * 0.81, "Voltar");
+        this.voltarBT = this.add.image(width  * 0.24, height * 0.85, "Voltar");
         this.voltarBT.visible = false;
-        this.voltarBT.setScale(scale);
+        this.voltarBT.setScale(0.7);
         this.voltarBT.setInteractive({ useHandCursor: true });
 
         this.debugText = this.add.text(10, 10, '', { fontSize: '16px', fill: '#fff' }).setVisible(false);
@@ -196,11 +197,11 @@ class Menu extends Phaser.Scene{
                     size = 5;
                     this.scene.start("Game", { difficulty: difficulty, size: size });
                     break;
-                case this.topBT:
-                    break;
                 case this.infoBT:
+                    this.scene.start("Info");
                     break;
                 case this.credBT:
+                    this.scene.start("Creditos");
                     break;
                 case this.boneco:
                     if ( ! this.boneco.isSpinning ){

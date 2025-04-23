@@ -7,7 +7,7 @@ class Game extends Phaser.Scene{
         this.load.image("Creditos", "sprites/bt_creditos.png");
         this.load.image("Info", "sprites/bt_info.png");
         this.load.image("Top", "sprites/bt_top.png");
-        this.load.image("Voltar", "sprites/bt_fechar.png");
+        this.load.image("Voltar", "sprites/quadradoback.png");
         this.load.image("QuadradoNivel1", "sprites/quadradinho3por3.png");
         this.load.image("QuadradoNivel2", "sprites/quadradinho3por3-2.png");
         this.load.image("QuadradoNivel3", "sprites/quadradinho4por4.png");
@@ -59,17 +59,11 @@ class Game extends Phaser.Scene{
         this.background = this.add.sprite(width * 0.5, height * 0.5, "background");
         this.background.setScale(1.5);
 
-        this.topBT = this.add.image(width * 0.24, height * 0.85, "Top");
-        this.topBT.setScale(scale);
-        this.topBT.setInteractive({ useHandCursor: true });
-
         this.infoBT = this.add.image(width * 0.16, height * 0.89, "Info");
         this.infoBT.setScale(scale);
-        this.infoBT.setInteractive({ useHandCursor: true });
 
         this.credBT = this.add.image(width * 0.08, height * 0.93, "Creditos");
         this.credBT.setScale(scale);
-        this.credBT.setInteractive({ useHandCursor: true });
 
         this.maxBT = this.add.image(width * 0.065, height * 0.1, "Maximizar");
         this.maxBT.setScale(scale);
@@ -80,9 +74,13 @@ class Game extends Phaser.Scene{
         this.minBT.setScale(scale);
         this.minBT.setInteractive({ useHandCursor: true });
 
-        this.voltarBT = this.add.image(width * 0.32, height * 0.81, "Voltar");
-        this.voltarBT.setScale(scale);
+        this.voltarBT = this.add.image(width * 0.24, height * 0.85, "Voltar");
+        this.voltarBT.setScale(0.7);
         this.voltarBT.setInteractive({ useHandCursor: true });
+
+        this.credBT.on('pointerdown', () => {
+            this.scene.start("creditos");
+        });
 
         this.voltarBT.on('pointerdown', () => {
             this.scene.start("Menu");
@@ -288,9 +286,9 @@ class Game extends Phaser.Scene{
 
     createVirtualKeyboard(){
         const buttonSize = 100;
-        const buttonPadding = 20;
-        const keyboardX = game.config.width * 0.15;
-        const keyboardY = game.config.height * 0.35;
+        const buttonPadding = 60;
+        const keyboardX = game.config.width * 0.10;
+        const keyboardY = game.config.height * 0.27;
     
         const numbers = [
             [1,2,3],
@@ -305,7 +303,7 @@ class Game extends Phaser.Scene{
         for (let row = 0; row < numbers.length; row++){
             for (let col = 0; col < numbers[row].length; col++){
                 if (row === 3){
-                    buttonX = keyboardX + (col * (buttonSize + buttonPadding)) + 120;
+                    buttonX = keyboardX + (col * (buttonSize + buttonPadding)) + 160;
                     buttonY = keyboardY + (row * (buttonSize + buttonPadding));
                 } else {
                     buttonX = keyboardX + col * (buttonSize + buttonPadding);
