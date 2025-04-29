@@ -318,9 +318,25 @@ class Game extends Phaser.Scene{
                     if (this.selectedCell) {
                         const { row: cellRow, col: cellCol } = this.selectedCell;
                         const cell = this.cells[cellRow][cellCol];
-                        cell.value = numbers[row][col]; // Usar o valor do botão clicado
-                        cell.text.setText(cell.value.toString());
-                        console.log("Valor definido:", cell.value);
+                
+                        // Obter o valor atual da célula (ou vazio se for null)
+                        let currentValue = '';
+                        if (cell.value !== null) {
+                            currentValue = cell.value.toString();
+                        }
+                
+                        // Verificar se o limite de dois dígitos foi atingido
+                        if (currentValue.length < 2) {
+                            // Concatenar o número clicado ao valor atual
+                            const newValue = currentValue + numbers[row][col].toString();
+                
+                            // Atualizar o valor e o texto da célula
+                            cell.value = parseInt(newValue, 10); // Converter para número inteiro
+                            cell.text.setText(newValue); // Atualizar o texto exibido
+                            console.log("Valor definido:", cell.value);
+                        } else {
+                            console.log("Limite de dois dígitos atingido.");
+                        }
                     }
                 });
             }
