@@ -35,13 +35,13 @@ class Game extends Phaser.Scene{
                 this.operators = ['+', '-'];
                 break;
             case 2: // Level 2: add, subtract, multiply (with restrictions)
-                this.operators = ['+', '-', 'X'];
+                this.operators = ['+', '-', '×'];
                 this.restrictedMultiplications = [
                     '7X8', '8X7', '8X8', '8X9', '9X7', '9X8', '9X9'
                 ];
                 break;
             case 3: // Level 3: all operations
-                this.operators = ['+', '-', 'X', '÷'];
+                this.operators = ['+', '-', '×', '÷'];
                 break;
             default:
                 this.operators = ['+', '-'];
@@ -152,7 +152,11 @@ class Game extends Phaser.Scene{
         console.log("\nResultados das Linhas:", puzzle.rowResults);
         console.log("Resultados das Colunas:", puzzle.colResults);
         */
+        /*
+        Nivel 1 :
+
         
+        */
         // Store the puzzle components
         this.cells = [];
         this.horizontalOps = [];
@@ -220,7 +224,7 @@ class Game extends Phaser.Scene{
                     const opText = this.add.text(
                         opX, opY, 
                         puzzle.horizontalOps[row][col], 
-                        { fontSize: `${Math.round(28 * this.gridNumberOpScale)}px`, fontFamily: 'Arial', color: '#ffffff' }
+                        { fontSize: `${Math.round(24 * this.gridNumberOpScale)}px`, fontFamily: 'Arial Black', color: '#ffffff' }
                     ).setOrigin(0.5);
                     
                     this.horizontalOps[row][col] = {
@@ -237,7 +241,7 @@ class Game extends Phaser.Scene{
                     const opText = this.add.text(
                         opX, opY,
                         puzzle.verticalOps[row][col],
-                        { fontSize: `${Math.round(28 * this.gridNumberOpScale)}px`, fontFamily: 'Arial', color: '#ffffff' }
+                        { fontSize: `${Math.round(24 * this.gridNumberOpScale)}px`, fontFamily: 'Arial Black', color: '#ffffff' }
                     ).setOrigin(0.5);
                     
                     this.verticalOps[row][col] = {
@@ -245,23 +249,37 @@ class Game extends Phaser.Scene{
                         value: puzzle.verticalOps[row][col]
                     };
                 }
+
+
             }
             
             // Add row result (at the end of each row)
             const rowResultX = startX + (this.size * 1.1) * (this.cellSize + this.cellPadding);
             const rowResultY = startY + (row * (this.cellSize + this.cellPadding));
+            let rowResultsAux = 0;
+            let row_equals = 0;
 
-            
+            if (this.size === 3){
+                rowResultsAux = 90;
+                row_equals = 10;
+            } else if (this.size === 4){
+                rowResultsAux = 90;
+                row_equals = 20;
+            } else {
+                rowResultsAux = 90;
+                row_equals = 40;
+            }
+
             this.add.text(
-                rowResultX - this.cellPadding, rowResultY, 
+                rowResultX - this.cellPadding - row_equals, rowResultY, 
                 '=', 
-                { fontSize: `${Math.round(28 * this.gridNumberOpScale)}px`, fontFamily: 'Arial', color: '#ffffff' }
+                { fontSize: `${Math.round(24 * this.gridNumberOpScale)}px`, fontFamily: 'Arial Black', color: '#ffffff' }
             ).setOrigin(0.5);
             
             this.add.text(
-                rowResultX, rowResultY,
+                rowResultX-rowResultsAux, rowResultY,
                 puzzle.rowResults[row].toString(),
-                { fontSize: `${Math.round(28 * this.gridNumberOpScale)}px`, fontFamily: 'Arial', color: '#ffffff' }
+                { fontSize: `${Math.round(24 * this.gridNumberOpScale)}px`, fontFamily: 'Arial Black', color: '#ffffff' }
             ).setOrigin(0.5);
         }
         
@@ -269,17 +287,30 @@ class Game extends Phaser.Scene{
         for (let col = 0; col < this.size; col++) {
             const colResultX = startX + (col * (this.cellSize + this.cellPadding));
             const colResultY = startY + (this.size * 1.1) * (this.cellSize + this.cellPadding);
-            
+            let colResultsAux = 0;
+            let col_equals = 0;
+
+            if (this.size === 3){
+                colResultsAux = 90;
+                col_equals = 10;
+            } else if (this.size === 4){
+                colResultsAux = 90;
+                col_equals = 20;
+            } else {
+                colResultsAux = 90;
+                col_equals = 40;
+            }
+
             this.add.text(
-                colResultX, colResultY - this.cellPadding, 
+                colResultX, colResultY - this.cellPadding-col_equals , 
                 '=', 
-                { fontSize: `${Math.round(28 * this.gridNumberOpScale)}px`, fontFamily: 'Arial', color: '#ffffff' }
-            ).setOrigin(0.5);
+                { fontSize: `${Math.round(24 * this.gridNumberOpScale)}px`, fontFamily: 'Arial Black', color: '#ffffff' }
+            ).setOrigin(0.5).setAngle(90);
             
             this.add.text(
-                colResultX, colResultY,
+                colResultX, colResultY-colResultsAux,
                 puzzle.colResults[col].toString(),
-                { fontSize: `${Math.round(28 * this.gridNumberOpScale)}px`, fontFamily: 'Arial', color: '#ffffff' }
+                { fontSize: `${Math.round(24 * this.gridNumberOpScale)}px`, fontFamily: 'Arial Black', color: '#ffffff' }
             ).setOrigin(0.5);
         }
     }
