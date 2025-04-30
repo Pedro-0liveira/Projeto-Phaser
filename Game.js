@@ -24,6 +24,8 @@ class Game extends Phaser.Scene{
         this.load.image("Number8", "sprites/number8.png");
         this.load.image("Number9", "sprites/number9.png");
         this.load.image("Apagar", "sprites/apagarnumber.png");
+        this.load.image("Corrigir", "sprites/corrige.png");
+        this.load.image("Verificar", "sprites/verifica.png");
     }
     
     init(data){
@@ -99,7 +101,15 @@ class Game extends Phaser.Scene{
         });
 
         this.createCrucigrama();
-        this.createVirtualKeyboard();    
+        this.createVirtualKeyboard();   
+        
+        this.corrigirBT = this.add.image(width * 0.33, height * 0.80, "Corrigir");
+        this.corrigirBT.setScale(0.7);
+        this.corrigirBT.setInteractive({ useHandCursor: true });
+
+        this.verificarBT = this.add.image(width * 0.10, height * 0.67, "Verificar");
+        this.verificarBT.setScale(0.6);
+        this.verificarBT.setInteractive({ useHandCursor: true });
     }
 
     createCrucigrama() {
@@ -531,7 +541,7 @@ class Game extends Phaser.Scene{
     }
     
     getValidNumb(row, col){
-        let maxnum = 9;
+        let maxnum = 99;
         let minnum = 0;
     
         // Checks if we have a - in either the line above or column to the left
@@ -894,6 +904,22 @@ class Game extends Phaser.Scene{
                         }
                     }
                 }
+            }
+        }
+
+        // Validação para resultados de linhas e colunas
+        this.calculateResults();
+        for (let i = 0; i < this.rowResults.length; i++) {
+            if (this.rowResults[i] > 99) {
+                console.error(`Row ${i} result exceeds 99: ${this.rowResults[i]}`);
+                return false;
+            }
+        }
+
+        for (let i = 0; i < this.colResults.length; i++) {
+            if (this.colResults[i] > 99) {
+                console.error(`Column ${i} result exceeds 99: ${this.colResults[i]}`);
+                return false;
             }
         }
         
