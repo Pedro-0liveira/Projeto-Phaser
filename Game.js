@@ -100,7 +100,7 @@ class Game extends Phaser.Scene{
             this.minBT.visible = false;
         });
 
-        this.createCrucigrama();
+        this.createCrucigrama();    
         this.createVirtualKeyboard();   
         
         this.corrigirBT = this.add.image(width * 0.33, height * 0.80, "Corrigir");
@@ -334,6 +334,26 @@ class Game extends Phaser.Scene{
                 puzzle.colResults[col].toString(),
                 { fontSize: `${Math.round(24 * this.gridNumberOpScale)}px`, fontFamily: 'Arial Black', color: '#ffffff' }
             ).setOrigin(0.5);
+        }
+
+        let filledCells = 0;
+        while (filledCells < 3) {
+            const row = Phaser.Math.Between(0, this.size - 1);
+            const col = Phaser.Math.Between(0, this.size - 1);
+
+            // Verifica se a linha e a coluna não são pares
+            if (row % 2 === 0 && col % 2 === 0) {
+                const cell = this.cells[row][col];
+
+                // Verifica se a célula contém um número válido e ainda não foi preenchida
+                if (cell.value === null) {
+                    cell.value = cell.correctValue; // Define o valor interno
+                    cell.text.setText(cell.correctValue.toString()); // Atualiza o texto visível
+                    cell.sprite.setInteractive(false); // Desabilita a interação com a célula
+                    cell.locked = true; // Marca a célula como bloqueada
+                    filledCells++;
+                }
+            }
         }
     }
 
@@ -939,6 +959,12 @@ class Game extends Phaser.Scene{
     }
 
     selectCell(row, col) {
+        const cell = this.cells[row][col];
+
+        if (cell.locked) {
+            return;
+        }
+
         // Handle cell selection for number input
         this.selectedCell = { row, col };
         
