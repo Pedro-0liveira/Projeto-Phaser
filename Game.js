@@ -39,7 +39,7 @@ class Game extends Phaser.Scene{
             case 2: // Level 2: add, subtract, multiply (with restrictions)
                 this.operators = ['+', '-', '×'];
                 this.restrictedMultiplications = [
-                    '7X8', '8X7', '8X8', '8X9', '9X7', '9X8', '9X9'
+                    '7×8', '8×7', '8×8', '8×9', '9×7', '9×8', '9×9'
                 ];
                 break;
             case 3: // Level 3: all operations
@@ -107,6 +107,18 @@ class Game extends Phaser.Scene{
         this.corrigirBT.setScale(0.7);
         this.corrigirBT.setInteractive({ useHandCursor: true });
 
+        /*
+        this.corrigirBT.on('pointerdown', () => {
+            if (cont_Verificar === 3){
+            }
+        });
+
+        this.verificarBT.on('pointerdown', () => {
+            if (this.grid === full && this.grid != correta){
+                cont_Verificar++;
+            }
+        });
+        */
         this.verificarBT = this.add.image(width * 0.10, height * 0.67, "Verificar");
         this.verificarBT.setScale(0.6);
         this.verificarBT.setInteractive({ useHandCursor: true });
@@ -573,7 +585,7 @@ class Game extends Phaser.Scene{
         
         // This restriction only occurs in diff 2
         if(this.difficulty === 2){
-            if(row > 0 && this.grid[row-1][col] === 'X'){
+            if(row > 0 && this.grid[row-1][col] === '×'){
                 if(this.grid[row-2][col] >= 7){
                     maxnum = Math.min(Math.floor(55/this.grid[row-2][col]), maxnum);
                     if(row > 2 && this.grid[row-3][col] === '-'){
@@ -586,7 +598,7 @@ class Game extends Phaser.Scene{
                     }
                 }
                 
-                if(col > 0 && this.grid[row][col-1] === 'X'){
+                if(col > 0 && this.grid[row][col-1] === '×'){
                     if(this.grid[row][col-2] >= 7){
                         maxnum = Math.min(Math.floor(55/this.grid[row][col-2]), maxnum);
                     }
@@ -603,14 +615,14 @@ class Game extends Phaser.Scene{
             }
         }
         else if(this.difficulty === 3){
-            if(col > 3 && this.grid[row][col-3] === '-' && this.grid[row][col-1] === 'X'){
+            if(col > 3 && this.grid[row][col-3] === '-' && this.grid[row][col-1] === '×'){
                 const prevResult = this.calccol(row, col-4);
                 maxnum = Math.min(Math.floor((prevResult+1)/this.grid[row][col-2]), maxnum);
                 
                 if(maxnum < 0) maxnum = 0;
             }
             
-            if(row > 3 && this.grid[row-3][col] === '-' && this.grid[row-1][col] === 'X'){
+            if(row > 3 && this.grid[row-3][col] === '-' && this.grid[row-1][col] === '×'){
                 const prevResult = this.calcrow(row-4, col);
                 maxnum = Math.min(Math.floor((prevResult+1)/this.grid[row-2][col]), maxnum);
                 
@@ -733,7 +745,7 @@ class Game extends Phaser.Scene{
         
         // First pass: handle multiplication and division
         for (let i = 1; i < calcList.length - 1; i += 2) {
-            if (calcList[i] === 'X' || calcList[i] === '÷') {
+            if (calcList[i] === '' || calcList[i] === '÷') {
                 // For division, ensure we're not dividing by zero
                 if (calcList[i] === '÷' && calcList[i+1] === 0) {
                     console.error("Division by zero detected!");
@@ -815,7 +827,7 @@ class Game extends Phaser.Scene{
                     result = 0;
                 }
                 break;
-            case 'X':
+            case '×':
                 result = num1 * num2;
                 break;
             case '÷':
