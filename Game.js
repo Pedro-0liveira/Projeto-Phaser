@@ -230,7 +230,7 @@ class Game extends Phaser.Scene{
                     sprite: cell,
                     text: cellText,
                     value: null, // Player will fill this
-                    correctValue: puzzle.grid[row][col] // The correct answer
+                    correctValue: puzzle.grid[row*2][col*2] // The correct answer
                 };
                 
                 // Add cell selection handling
@@ -337,12 +337,13 @@ class Game extends Phaser.Scene{
         }
 
         let filledCells = 0;
+
         while (filledCells < 3) {
             const row = Phaser.Math.Between(0, this.size - 1);
             const col = Phaser.Math.Between(0, this.size - 1);
-
+            // Verifica se a célula já foi preenchida
             // Verifica se a linha e a coluna não são pares
-            if (row % 2 === 0 && col % 2 === 0) {
+            if (typeof this.cells[row][col].correctValue === 'number') {
                 const cell = this.cells[row][col];
 
                 // Verifica se a célula contém um número válido e ainda não foi preenchida
