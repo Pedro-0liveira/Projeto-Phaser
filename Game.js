@@ -802,8 +802,56 @@ class Game extends Phaser.Scene{
     
 
 
-    getValidOp(){
-        return Phaser.Math.RND.pick(this.operators);
+    getValidOp(row, col){
+        const maxConsecutiveOps = {
+            '+': 2,
+            '-': 2,
+            '×': 2,
+            '÷': 2
+        };
+        const consecutiveOpsCount = {
+            '+': 0,
+            '-': 0,
+            '×': 0,
+            '÷': 0
+        };
+
+        if(col > 1 && row % 2 === 0){
+            let prevOp = null;
+            for(let c = col - 2; c >=1; c -=2){
+                const op = this.grid[row][c];
+                if(op === prevOp || prevOp === null){
+                    prevOp = op;
+                    consecutiveOpsCount[op]++;
+                }else{
+                    break;
+                }
+            }
+        }
+        if(row > 1 && col % 2 === 0){
+            let prevOp = null;
+            for(let r = row - 2; r >= 1; r -= 2){
+                const op = this.grid[r][col];
+                if(op === prevOp || prevOp === null){
+                    prevOp = op;
+                    consecutiveOpsCount[op]++;
+                }
+                else{
+                    break;
+                }
+            }
+        }
+        let availableOps = [...this.operators];
+        for(const [op, count] of Object.entries(consecutiveOpsCount)){
+            if(count >= maxConsecutiveOps[op]){
+                availableOps = availableOps.filter(o => o !== op);
+            }
+        }
+        if(availableOps.length === 0){
+            console.log("No valid operators available. Defaulting to '+'.");
+            return '+'; // Default to addition if no valid operators are available
+        }
+        return Phaser.Math.RND.pick(availableOps);
     }
 
 /*
