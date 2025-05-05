@@ -7,7 +7,7 @@ class Game extends Phaser.Scene{
         this.load.image("Creditos", "sprites/bt_creditos.png");
         this.load.image("Info", "sprites/bt_info.png");
         this.load.image("Top", "sprites/bt_top.png");
-        this.load.image("Voltar", "sprites/quadradoback.png");
+        this.load.image("Voltar", "sprites/back-bt.png");
         this.load.image("QuadradoNivel1", "sprites/quadradinho3por3.png");
         this.load.image("QuadradoNivel2", "sprites/quadradinho3por3-2.png");
         this.load.image("QuadradoNivel3", "sprites/quadradinho4por4.png");
@@ -77,7 +77,7 @@ class Game extends Phaser.Scene{
         this.minBT.setInteractive({ useHandCursor: true });
 
         this.voltarBT = this.add.image(width * 0.24, height * 0.85, "Voltar");
-        this.voltarBT.setScale(0.7);
+        this.voltarBT.setScale(scale);
         this.voltarBT.setInteractive({ useHandCursor: true });
 
         this.credBT.on('pointerdown', () => {
