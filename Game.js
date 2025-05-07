@@ -85,6 +85,7 @@ class Game extends Phaser.Scene{
         });
 
         this.voltarBT.on('pointerdown', () => {
+            this.ClearSelectedCell();
             this.scene.start("Menu");
         });
 
@@ -397,7 +398,7 @@ class Game extends Phaser.Scene{
                 
                 const numberButton = this.add.image(buttonX, buttonY, "Number" + numbers[row][col]).setScale(0.5).setInteractive({ useHandCursor: true });
                 const buttonTextStyle = { fontSize: `${Math.round(28 * this.gridNumberOpScale)}px`, fontFamily: 'Arial', color: '#ffffff' };
-    
+
                 // Corrigido: usar o valor do botão (numbers[row][col]) em vez da posição
                 numberButton.on('pointerdown', () => {
                     if (this.selectedCell) {
@@ -1075,6 +1076,13 @@ class Game extends Phaser.Scene{
         this.highlightSelectedCell();
     }
     
+    ClearSelectedCell() {
+        if (this.selectedCell){
+            this.selectedCell = null;
+        }
+    }
+
+
     highlightSelectedCell() {
         // Remove highlight from all cells
         for (let row = 0; row < this.size; row++) {
