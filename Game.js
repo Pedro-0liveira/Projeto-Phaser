@@ -124,6 +124,17 @@ class Game extends Phaser.Scene{
         this.verificarBT.setInteractive({ useHandCursor: true });
     }
 
+    isPrime(n) {
+        if (n <= 1) return false;
+        if (n <= 3) return true;
+        if (n % 2 === 0 || n % 3 === 0) return false;
+        for (let i = 5; i * i <= n; i += 6) {
+            if (n % i === 0 || n % (i + 2) === 0) return false;
+        }
+        return true;
+    }
+
+
     createCrucigrama() {
         this.cellSize = 70;
         this.cellPadding = 150;
@@ -338,7 +349,7 @@ class Game extends Phaser.Scene{
 
         let filledCells = 0;
 
-        while (filledCells < 3) {
+        while (filledCells < this.size + 2 - this.difficulty) {
             const row = Phaser.Math.Between(0, this.size - 1);
             const col = Phaser.Math.Between(0, this.size - 1);
             // Verifica se a célula já foi preenchida
@@ -435,45 +446,47 @@ class Game extends Phaser.Scene{
     
     generatePuzzle() {
         let attempts = 0;
-        const maxAttempts = 100; // Prevent infinite loops
+        const maxAttempts = 1; // Prevent infinite loops
         let validPuzzleGenerated = false;
         
         while (!validPuzzleGenerated && attempts < maxAttempts) {
             attempts++;
             
-            this.grid = Array.from({ length: this.gridSize }, () => Array(this.gridSize).fill(0));
-            
             // Fill the grid with numbers and operators
+            // Defining important numbers first 
+            this.grid = Array.from({ length: this.gridSize }, () => Array(this.gridSize).fill(0));
+            for (let i = 0; i < this.gridSize; i += 2) {
+                this.grid[i][this.gridSize - 1] = Phaser.Math.Between(10, 99); // Row target
+                this.grid[this.gridSize - 1][i] = Phaser.Math.Between(10, 99); // Column target
+            }
+
             for(let row = 0; row < this.gridSize-1; row++){
-                for(let col = 0; col < this.gridSize; col++){
-                    if (row % 2 === 1){
-                        if (col % 2 === 0){
-                            this.grid[row][col] = this.getValidOp(row, col); // Random operator
-                        } else {
+                for(let col = 0; col < this.gridSize-1; col++){
+                    if(row % 2 === 0){
+                        if(col % 2 === 0){
+                            this.grid[row][col] = this.getValidNumb(row, col);
+                        }else{
+                            this.grid[row][col] = this.getValidOp2(row, col); 
+                            //this.grid[row][col] = this.getValidOp(row, col); // Random operator
+                        }
+                    }else{
+                        if(col % 2 === 0){
+                            this.grid[row][col] = this.getValidOp2(row, col); 
+                            //this.grid[row][col] = this.getValidOp(row, col); // Random operator
+                        }else{
                             this.grid[row][col] = null;
                         }
-                    } else {                    
-                        if(col % 2 === 0 && row % 2 === 0){
-                            this.grid[row][col] = this.getValidNumb(row, col); // Random number between 0-9
-                        }
-                        else{
-                            this.grid[row][col] = this.getValidOp(row, col); // Random operator
-                        }
                     }
-                }
-                if (row % 2 === 1){
-                    this.grid[row][this.gridSize - 1] = null; // Last column is an operator
-                } else {
-                    this.grid[row][this.gridSize - 1] = 0; // Last column is a number
                 }
             }
     
             // Validate the generated puzzle
             validPuzzleGenerated = this.validatePuzzle();
-            
+            validPuzzleGenerated = true;
             if(validPuzzleGenerated) {
                 this.calculateResults();
-                
+                console.log(this.rowResults);
+                console.log(this.colResults);
                 // Verify all results are finite integers
                 let allResultsValid = true;
                 for(let i = 0; i < this.rowResults.length; i++) {
@@ -495,12 +508,15 @@ class Game extends Phaser.Scene{
             
             console.log(`Attempt ${attempts}: Puzzle ${validPuzzleGenerated ? 'valid' : 'invalid'}`);
         }
-        
+
+        /*
+        // Comentar para testar geraçao nova
         if (!validPuzzleGenerated) {
             console.error("Failed to generate a valid puzzle after", maxAttempts, "attempts");
             // Fallback to a simple puzzle with only addition
             this.fallbackSimplePuzzle();
         }
+        */
         
         console.log("Final puzzle generated:", this.grid);
         
@@ -855,6 +871,45 @@ class Game extends Phaser.Scene{
         return Phaser.Math.RND.pick(availableOps);
     }
 
+
+    getValidOp2(row, col){
+        //contas para perceber se estamos em coluna ou linha
+        let size = this.gridSize;
+        let line = (row % 2 === 0);
+        let currentresult = 0;
+        let wantedresult = 0;
+        let availableOps = [...this.operators];  
+        if(line){
+            //Estamos numa linha 
+            currentresult = this.calcrow(row,col+1);
+            wantedresult = this.grid[row][size-1];
+            console.log(row,col,this.grid[row][col-1],currentresult,wantedresult)
+        }else{
+            //Estamos numa coluna
+            currentresult = this.calccol(row+1,col);
+            wantedresult = this.grid[size-1][col];
+            console.log(row,col,this.grid[row-1][col],currentresult,wantedresult)
+        }
+        if(currentresult<=wantedresult){
+            availableOps = availableOps.filter(op => ['+','×'].includes(op));
+        }else{
+            availableOps = availableOps.filter(op => ['-','÷'].includes(op));
+            if(availableOps.includes('÷')){
+                let isPrime;
+                if(line){
+                    isPrime = this.isPrime(this.checklastmultdivRow(row,col+1));
+                }else{
+                    isPrime = this.isPrime(this.checklastmultdivCol(row+1,col));
+                }
+                if(isPrime){
+                    availableOps = availableOps.filter(op => op !== '÷');
+                    console.log("removed a division",row,col)
+                }
+            }
+        }
+        let operator = Phaser.Math.RND.pick(availableOps);
+        return operator;
+    }
 /*
 0: (6) [4, '-', 0, '-', 1, 0]
 1: (6) ['+', null, '+', null, '+', null]
@@ -955,7 +1010,6 @@ class Game extends Phaser.Scene{
                 }
             }
         }
-        
         // Now check for negative subtraction results
         for (let row = 0; row < this.gridSize; row++) {
             for (let col = 0; col < this.gridSize; col++) {

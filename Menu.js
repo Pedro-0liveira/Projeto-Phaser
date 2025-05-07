@@ -8,6 +8,7 @@ let scale;
 let difficulty;
 let size;
 let BTlock;
+let loggedin;
 
 class Menu extends Phaser.Scene{
     constructor(){
@@ -24,14 +25,15 @@ class Menu extends Phaser.Scene{
         this.load.image("Maximizar", "sprites/fullscreen-bt-1.png");
         this.load.image("Minimizar", "sprites/fullscreen-bt-2.png");
         this.load.image("Login", "sprites/login-bt.png");
-
-        //temp
+        this.load.image("Logout", "sprites/logout-bt.png")
         this.load.image("Tamanho 3x3", "sprites/bt_3por3.png");
         this.load.image("Tamanho 4x4", "sprites/bt_4por4.png");
         this.load.image("Tamanho 5x5", "sprites/bt_5por5.png");
-
-        //temp backbutton
         this.load.image("Voltar", "sprites/back-bt.png");
+        this.load.image("Fechar", "sprites/bt_fechar.png")
+        this.load.image("Menu Login", "sprites/login.png")
+        this.load.image("Confirmar", "sprites/verifica.png");
+        this.load.image("Ok", "sprites/btok.png");
     }
     create(){
         width = game.config.width;
@@ -40,6 +42,7 @@ class Menu extends Phaser.Scene{
         difficulty = 0;
         size = 0;
         BTlock = false;
+        loggedin = false;
 
         //Fundo
         this.background = this.add.sprite(width * 0.5, height * 0.5, "background");
@@ -84,13 +87,6 @@ class Menu extends Phaser.Scene{
         this.tam5BT.visible = false;
         this.tam5BT.setInteractive({ useHandCursor: true });
 
-        //Botao Top
-        /*
-        this.topBT = this.add.image(width * 0.24, height * 0.85, "Top");
-        this.topBT.setScale(scale);
-        this.topBT.setInteractive({ useHandCursor: true });
-        */
-
         //Botao Info
         this.infoBT = this.add.image(width * 0.16, height * 0.89, "Info");
         this.infoBT.setScale(scale);
@@ -101,28 +97,71 @@ class Menu extends Phaser.Scene{
         this.credBT.setScale(scale);
         this.credBT.setInteractive({ useHandCursor: true });
 
-        //Botao Login
-        this.loginBT = this.add.image(width * 0.42, height * 0.93, "Login");
-        this.loginBT.setScale(scale);
-        this.loginBT.setInteractive({ useHandCursor: true });
-
-        //Botao fullscreen (TEMP)
+        //Botao fullscreen
         this.maxBT = this.add.image(width * 0.065, height * 0.1, "Maximizar");
         this.maxBT.setScale(scale);
         this.maxBT.setInteractive({ useHandCursor: true });
-
-        //Botao un-fullscreen (TEMP)
+        
+        //Botao un-fullscreen
         this.minBT = this.add.image(width * 0.065, height * 0.1, "Minimizar");
         this.minBT.visible = false;
         this.minBT.setScale(scale);
         this.minBT.setInteractive({ useHandCursor: true });
-
-        //Botao voltar (TEMP)
+        
+        //Botao voltar 
         this.voltarBT = this.add.image(width  * 0.24, height * 0.85, "Voltar");
         this.voltarBT.visible = false;
         this.voltarBT.setScale(scale);
         this.voltarBT.setInteractive({ useHandCursor: true });
+        
+        //Botao Login
+        this.loginBT = this.add.image(width * 0.42, height * 0.93, "Login");
+        this.loginBT.setScale(scale);
+        this.loginBT.visible = true;
+        this.loginBT.setInteractive({ useHandCursor: true });
+        //Botao Logout
+        this.logoutBT = this.add.image(width * 0.42, height * 0.93, "Logout");
+        this.logoutBT.setScale(scale);
+        this.logoutBT.visible = false;
+        this.logoutBT.setInteractive({ useHandCursor: true });
+        //Menu Login
+        this.qdlogin = this.add.sprite(0.5 * game.config.width, 0.50 * game.config.height, "Menu Login");
+        this.qdlogin.setScale(scale*1.5);
+        this.qdlogin.visible = false;
+        //Botao fechar/voltar (login)
+        this.fecharBTlog = this.add.image(width * 0.67, height * 0.3, "Fechar");
+        this.fecharBTlog.visible = false;
+        this.fecharBTlog.setScale(scale);
+        this.fecharBTlog.setInteractive({ useHandCursor: true });
+        this.loginBTpressed = false;
+        this.loggedIn = false;
+        //Botao Ok (login)
+        this.OkBTlog = this.add.image(width * 0.61, height * 0.74, "Ok");
+        this.OkBTlog.visible = false;
+        this.OkBTlog.setScale(scale);
+        this.OkBTlog.setInteractive({ useHandCursor: true });
 
+        let user = `
+        <input type="text" name="username" style="font-size: 50px;font-family:'font1';text-align:center;">`;
+        let pass = `
+        <input type="password" name="password" style="font-size:50px;font-family:'font1';text-align:center;">`;      
+              
+        //Caixas de texto
+        this.userbox = this.add.dom(0.533 * game.config.width, 0.44 * game.config.height).createFromHTML(user);
+        this.userbox.setScale(0.7);
+        this.userbox.visible = false;
+        this.passbox = this.add.dom(0.53 * game.config.width, 0.61 * game.config.height).createFromHTML(pass);
+        this.passbox.setScale(0.7);
+        this.passbox.visible = false;
+        
+        this.loginErrorMsg = this.add.text(0.4 * game.config.width, 0.635 * game.config.height,"Utilizador ou Password Errados",{ fontFamily: 'font1',fontSize: 30,color: '#ff0000',align: 'center'});
+        this.loginErrorMsg.visible = false;
+
+        
+        const nonloginbuttons = [this.boneco, this.nivel1BT, this.nivel2BT, this.nivel3BT, this.tam3BT, this.tam4BT,
+            this.tam5BT, this.infoBT, this.credBT, this.maxBT, this.minBT, this.voltarBT];
+        const loginbuttons =    [this.OkBTlog, this.fecharBTlog];
+        
         this.debugText = this.add.text(10, 10, '', { fontSize: '16px', fill: '#fff' }).setVisible(false);
         this.input.keyboard.on('keydown-D', () => {
             debugMode = !debugMode;
@@ -131,15 +170,13 @@ class Menu extends Phaser.Scene{
 
         //Funcionalidade BTs
         this.input.on('gameobjectover',function(pointer, gameObject) {
-            if ( gameObject != this.boneco ){
-                gameObject.displayHeight += 5;
-                gameObject.displayWidth += 5;
+            if ( loginbuttons.includes(gameObject) || ( gameObject != this.boneco && !this.loginBTpressed)){
+                gameObject.setScale(scale + 0.05);
             }
         },this);
         this.input.on('gameobjectout',function(pointer, gameObject) {
-            if ( gameObject != this.boneco ){
-                gameObject.displayHeight -= 5;
-                gameObject.displayWidth -= 5;
+            if ( loginbuttons.includes(gameObject) || ( gameObject != this.boneco && !this.loginBTpressed)){
+                gameObject.setScale(scale);
             }
         },this);
 
@@ -150,6 +187,29 @@ class Menu extends Phaser.Scene{
 
         const fadeOut = (btn, callback) => {
             this.tweens.add({ targets: btn, alpha: 0, duration: 300, onComplete: () => { btn.setVisible(false); if (callback) callback(); } });
+        };
+
+        const grayIn = (btn) => {
+            btn.setTint(0x808080).setAlpha(0.5);
+        };
+
+        const grayOut = (btn) => {
+            btn.clearTint().setAlpha(1);
+        };
+
+        const resetscale = (btn) => {
+            btn.setScale(scale);
+        }
+        
+        const disableInteract = (btns) => {
+            btns.forEach(button => {
+                button.disableInteractive();
+            });
+        };
+        const enableInteract = (btns) => {
+            btns.forEach(button => {
+                button.setInteractive({ useHandCursor: true });
+            });
         };
 
         this.input.on('gameobjectdown', function(pointer, gameObject) {
@@ -205,7 +265,7 @@ class Menu extends Phaser.Scene{
                     break;
                 case this.boneco:
                     if ( ! this.boneco.isSpinning ){
-                        this.boneco.isSpinning = true
+                        this.boneco.isSpinning = true;
                         this.tweens.add({
                             targets: this.boneco,
                             angle: '+=360', 
@@ -218,14 +278,74 @@ class Menu extends Phaser.Scene{
                     }
                     break;
                 case this.maxBT:
-                    this.scale.startFullscreen();
-                    this.maxBT.visible = false;
-                    this.minBT.visible = true;
+                        this.scale.startFullscreen();
+                        this.maxBT.visible = false;
+                        this.minBT.visible = true;
                     break;
                 case this.minBT:
-                    this.scale.stopFullscreen();
-                    this.maxBT.visible = true;
-                    this.minBT.visible = false;
+                        this.scale.stopFullscreen();
+                        this.maxBT.visible = true;
+                        this.minBT.visible = false;
+                    break;
+                case this.loginBT:
+                    //Abri menu
+                    if(!this.loginBTpressed){
+                        this.loginBTpressed = !this.loginBTpressed;
+                        fadeIn(this.qdlogin);
+                        fadeIn(this.fecharBTlog);
+                        fadeIn(this.OkBTlog);
+                        grayIn(this.loginBT);
+                        resetscale(this.loginBT);        
+                        disableInteract(nonloginbuttons);
+                        // Logic to show the login text boxes
+                        this.userbox.setVisible = true;
+                        this.passbox.setVisible = true;
+
+                    }
+                    break;
+                case this.fecharBTlog:
+                    if(this.qdlogin.visible == true){
+                        this.loginBTpressed = !this.loginBTpressed;
+                        fadeOut(this.qdlogin);
+                        fadeOut(this.fecharBTlog);
+                        fadeOut(this.OkBTlog);
+                        grayOut(this.loginBT);
+                        resetscale(this.fecharBTlog);
+                        resetscale(this.loginBT);
+                        enableInteract(nonloginbuttons);
+                        this.userbox.setVisible = false;
+                        this.passbox.setVisible = false;
+                        this.loginErrorMsg.visible = false;
+                    }
+                    break;
+                case this.OkBTlog:
+                    //if (verificar que tem alguma coisa nas caixas)
+                    // tentar o login e armazenar valor e informaçoes da conta
+                    loggedin = 1;
+                    if (loggedin == 0){
+                        this.loginErrorMsg.visible = true;
+                    }else{
+                        this.loginBTpressed = !this.loginBTpressed;
+                        fadeOut(this.qdlogin);
+                        fadeOut(this.fecharBTlog);
+                        fadeOut(this.OkBTlog);
+                        grayOut(this.loginBT);
+                        resetscale(this.fecharBTlog);
+                        resetscale(this.loginBT);
+                        enableInteract(nonloginbuttons);
+                        this.userbox.setVisible = false;
+                        this.passbox.setVisible = false;
+                        this.loginErrorMsg.visible = false;
+                        this.logoutBT.visible = true;
+                        this.loginBT.visible = false;
+                    }
+                    // se login retornar falso 
+                    break;
+                case this.logoutBT:
+                    //limpar informaçao do user
+                    loggedin = 0;
+                    this.logoutBT.visible = false;
+                    this.loginBT.visible = true;
                     break;
             }
         },this);

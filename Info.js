@@ -10,9 +10,7 @@ class Info extends Phaser.Scene{
         this.load.image("Maximizar", "sprites/fullscreen-bt-1.png");
         this.load.image("Minimizar", "sprites/fullscreen-bt-2.png");
         this.load.image("Login", "sprites/login-bt.png");
-
-        //temp backbutton
-        this.load.image("Voltar", "sprites/quadradoback.png");
+        this.load.image("Voltar", "sprites/back-bt.png");
     }
     create(){
         width = game.config.width;
@@ -25,6 +23,7 @@ class Info extends Phaser.Scene{
         this.background.setScale(1.5);
 
         this.infoBT = this.add.image(width * 0.16, height * 0.89, "Info");
+        this.infoBT.setTint(0x808080).setAlpha(0.5);
         this.infoBT.setScale(scale);
 
         this.credBT = this.add.image(width * 0.08, height * 0.93, "Creditos");
@@ -41,10 +40,19 @@ class Info extends Phaser.Scene{
         this.minBT.setInteractive({ useHandCursor: true });
 
         this.voltarBT = this.add.image(width * 0.24, height * 0.85, "Voltar");
-        this.voltarBT.setScale(0.7);
+        this.voltarBT.setScale(scale);
         this.voltarBT.setInteractive({ useHandCursor: true });
         
         this.instrucoes = this.add.image(width * 0.68, height * 0.53, "instrucoes");
+
+        //Funcionalidade BTs
+        this.input.on('gameobjectover',function(pointer, gameObject) {
+                gameObject.setScale(scale + 0.05);
+        },this);
+        this.input.on('gameobjectout',function(pointer, gameObject) {
+                gameObject.setScale(scale);
+        },this);
+
 
         this.credBT.on('pointerdown', () => {
             this.scene.start("Creditos");
