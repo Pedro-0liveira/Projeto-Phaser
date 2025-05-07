@@ -119,10 +119,10 @@ class Game extends Phaser.Scene{
                 cont_Verificar++;
             }
         });
-        */
+        
         this.verificarBT = this.add.image(width * 0.10, height * 0.67, "Verificar");
         this.verificarBT.setScale(0.6);
-        this.verificarBT.setInteractive({ useHandCursor: true });
+        this.verificarBT.setInteractive({ useHandCursor: true });*/
     }
 
     isPrime(n) {
@@ -165,6 +165,17 @@ class Game extends Phaser.Scene{
         // Create the puzzle
         const puzzle = this.generatePuzzle();
         console.log("puzzle"); // Verifica o puzzle gerado
+        this.userGrid = Array.from({ length: this.gridSize }, (_, row) =>
+            Array.from({ length: this.gridSize }, (_, col) => {
+                // Copy numbers and operations from the game grid
+                if (typeof this.grid[row][col] === 'number' || typeof this.grid[row][col] === 'string') {
+                    return this.grid[row][col];
+                }
+                return null; // Empty cells for user input
+            })
+        );
+        console.log("userGrid", this.userGrid); // Verifica a grade do usuário
+
         /*
         // Adiciona este código para mostrar a solução na consola
         console.log("Solução do Crucigrama:");
@@ -422,6 +433,8 @@ class Game extends Phaser.Scene{
                             // Atualizar o valor e o texto da célula
                             cell.value = parseInt(newValue, 10); // Converter para número inteiro
                             cell.text.setText(newValue); // Atualizar o texto exibido
+                            this.userGrid[cellRow*2][cellCol*2] = cell.value; // Atualizar a grade do usuário
+                            console.log("Grid atualizado:", this.userGrid);
                             console.log("Valor definido:", cell.value);
                         } else {
                             console.log("Limite de dois dígitos atingido.");
@@ -446,6 +459,73 @@ class Game extends Phaser.Scene{
                 cell.text.setText('');
             }
         });
+        const verificarButtonX = keyboardX + (0.03 * (buttonSize + buttonPadding));
+        const verificarButtonY = keyboardY + (3 * (buttonSize + buttonPadding));
+        const verificarButton = this.add.image(verificarButtonX, verificarButtonY, "Verificar").setScale(0.6).setInteractive({ useHandCursor: true });
+
+        verificarButton.on('pointerdown', () => {
+            if (this.isGridComplete()) {
+                if (this.validateUserSolution()) {
+                    console.log("Parabéns! Você resolveu o crucigrama corretamente!");
+                } else {
+                    console.log("Solução incorreta. Tente novamente.");
+                }
+            } else {
+                console.log("O crucigrama não está completo.");
+            }
+        });
+    }
+    
+    validateUserSolution() {
+        const userRowResults = [];
+        const userColResults = [];
+    
+        // Calculate row results
+        for (let row = 0; row < this.gridSize; row += 2) { // Only even rows
+            const expression = [];
+            for (let col = 0; col < this.gridSize - 1; col++) {
+                expression.push(this.userGrid[row][col]);
+            }
+            const result = this.calculateVector(expression);
+            userRowResults.push(result);
+        }
+    
+        // Calculate column results
+        for (let col = 0; col < this.gridSize; col += 2) { // Only even columns
+            const expression = [];
+            for (let row = 0; row < this.gridSize - 1; row++) {
+                expression.push(this.userGrid[row][col]);
+            }
+            const result = this.calculateVector(expression);
+            userColResults.push(result);
+        }
+    
+        // Compare user results with the expected results
+        const rowsMatch = JSON.stringify(userRowResults) === JSON.stringify(this.rowResults);
+        const colsMatch = JSON.stringify(userColResults) === JSON.stringify(this.colResults);
+    
+        if (rowsMatch && colsMatch) {
+            console.log("User solution is correct!");
+            return true;
+        } else {
+            console.log("User solution is incorrect.");
+            console.log("Expected row results:", this.rowResults, "User row results:", userRowResults);
+            console.log("Expected column results:", this.colResults, "User column results:", userColResults);
+            return false;
+        }
+    }
+
+    isGridComplete(){
+        for (let row = 0; row < this.size; row++){
+            for (let col = 0; col < this.size; col++){
+                if (this.cells[row][col].value === null){
+                    console.log("Grid not complete yet!");
+                    return false;
+                }
+            }
+        }
+        console.log("Grid complete!");
+        return true;
     }
     
     generatePuzzle() {
