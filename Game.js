@@ -349,8 +349,11 @@ class Game extends Phaser.Scene{
         }
 
         let filledCells = 0;
+        const numbersToFill = [[4,6,9],
+                               [3,5,8],
+                               [3,4,7]]; // Define the numbers to fill in the grid
 
-        while (filledCells < this.size + 2 - this.difficulty) {
+        while (filledCells < numbersToFill[this.difficulty-1][this.size-3]) {
             const row = Phaser.Math.Between(0, this.size - 1);
             const col = Phaser.Math.Between(0, this.size - 1);
             // Verifica se a célula já foi preenchida
