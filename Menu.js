@@ -180,6 +180,10 @@ class Menu extends Phaser.Scene{
             }
         },this);
 
+        const resetscale = (btn) => {
+            btn.setScale(scale);
+        }
+
         const fadeIn = (btn) => {
             btn.setAlpha(0).setVisible(true);
             this.tweens.add({ targets: btn, alpha: 1, duration: 200, onComplete: () => { BTlock = false; } });
@@ -197,10 +201,6 @@ class Menu extends Phaser.Scene{
             btn.clearTint().setAlpha(1);
         };
 
-        const resetscale = (btn) => {
-            btn.setScale(scale);
-        }
-        
         const disableInteract = (btns) => {
             btns.forEach(button => {
                 button.disableInteractive();

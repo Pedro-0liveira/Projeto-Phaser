@@ -26,12 +26,15 @@ class Game extends Phaser.Scene{
         this.load.image("Apagar", "sprites/apagarnumber.png");
         this.load.image("Corrigir", "sprites/corrige.png");
         this.load.image("Verificar", "sprites/verifica.png");
+        //this.load.image("Retry", ""); //temp
     }
     
     init(data){
         this.difficulty = data.difficulty;
         this.size = data.size;
         this.gridSize = data.size * 2; // Adjusted for the grid size
+        this.scaleFactor = 0.9;
+        this.totalattempts = 0;
         switch(this.difficulty) {
             case 1: // Level 1: only addition and subtraction
                 this.operators = ['+', '-'];
@@ -53,42 +56,60 @@ class Game extends Phaser.Scene{
     create(){
         width = game.config.width;
         height = game.config.height;
-        scale = 0.9;
         console.log("Game scene created with difficulty:", this.difficulty, "and size:", this.size);
 
         //createGrid
-
         this.background = this.add.sprite(width * 0.5, height * 0.5, "background");
         this.background.setScale(1.5);
+        this.background.baseScale = 1.5;
 
-        this.infoBT = this.add.image(width * 0.16, height * 0.89, "Info");
-        this.infoBT.setScale(scale);
-
-        this.credBT = this.add.image(width * 0.08, height * 0.93, "Creditos");
-        this.credBT.setScale(scale);
-
+        
         this.maxBT = this.add.image(width * 0.065, height * 0.1, "Maximizar");
         this.maxBT.setScale(scale);
+        this.maxBT.baseScale = 0.9;
         this.maxBT.setInteractive({ useHandCursor: true });
-
+        
         this.minBT = this.add.image(width * 0.065, height * 0.1, "Minimizar");
         this.minBT.visible = false;
         this.minBT.setScale(scale);
+        this.minBT.baseScale = 0.9;
         this.minBT.setInteractive({ useHandCursor: true });
-
+        
+        this.corrigirBT = this.add.image(width * 0.32, height * 0.81, "Corrigir");
+        this.corrigirBT.setScale(0.68);
+        this.corrigirBT.baseScale = 0.68;
+        this.corrigirBT.setInteractive({ useHandCursor: true });
+        this.corrigirBT.setTint(0x808080).setAlpha(0.5);
+        
         this.voltarBT = this.add.image(width * 0.24, height * 0.85, "Voltar");
         this.voltarBT.setScale(scale);
+        this.voltarBT.baseScale = 0.9;
         this.voltarBT.setInteractive({ useHandCursor: true });
 
+        this.infoBT = this.add.image(width * 0.16, height * 0.89, "Info");
+        this.infoBT.setScale(scale);
+        this.infoBT.baseScale = 0.9;
+        this.infoBT.setTint(0x808080).setAlpha(0.5);
+
+        this.credBT = this.add.image(width * 0.08, height * 0.93, "Creditos");
+        this.credBT.setScale(scale);
+        this.credBT.baseScale = 0.9;
+        this.credBT.setTint(0x808080).setAlpha(0.5);
+        
+        this.regenBT = this.add.image(width * 0.90, height * 0.15, "Voltar"); //change to diff sprite later
+        this.regenBT.setScale(scale);
+        this.regenBT.baseScale = 0.9;
+        this.regenBT.setInteractive({ useHandCursor: true });
+        
         this.credBT.on('pointerdown', () => {
             this.scene.start("creditos");
         });
-
+        
         this.voltarBT.on('pointerdown', () => {
             this.ClearSelectedCell();
             this.scene.start("Menu");
         });
-
+        
         this.maxBT.on('pointerdown', () => {
             this.scale.startFullscreen();
             this.maxBT.visible = false;
@@ -101,30 +122,44 @@ class Game extends Phaser.Scene{
             this.minBT.visible = false;
         });
 
+        this.regenBT.on('pointerdown', () => {
+            this.clearGrid();
+            this.createCrucigrama();
+        });
+        
+        //Funcionalidade BTs
+        this.input.on('gameobjectover', function (pointer, gameObject) {
+            if (gameObject === this.corrigirBT ){
+                if (this.totalattempts === 3){
+                    gameObject.setScale(gameObject.baseScale + 0.05);
+                }
+            } else if (gameObject === this.verificarButton ){
+                if (this.totalattempts < 3){
+                    gameObject.setScale(gameObject.baseScale + 0.05);
+                }
+            } else if (gameObject.baseScale !== undefined) {
+                gameObject.setScale(gameObject.baseScale + 0.05);
+            } else {
+                gameObject.setScale(scaleFactor + 0.05);
+            }
+        }, this);
+        
+        this.input.on('gameobjectout', function (pointer, gameObject) {
+            if( gameObject === this.corrigirBT){
+                if (this.totalattempts === 3){
+                    gameObject.setScale(gameObject.baseScale);
+                }
+            } else if (gameObject.baseScale !== undefined) {
+                gameObject.setScale(gameObject.baseScale);
+            } else {
+                gameObject.setScale(scaleFactor);
+            }
+        }, this);
+        
         this.createCrucigrama();    
-        this.createVirtualKeyboard();   
-        
-        this.corrigirBT = this.add.image(width * 0.33, height * 0.80, "Corrigir");
-        this.corrigirBT.setScale(0.7);
-        this.corrigirBT.setInteractive({ useHandCursor: true });
-
-        /*
-        this.corrigirBT.on('pointerdown', () => {
-            if (cont_Verificar === 3){
-            }
-        });
-
-        this.verificarBT.on('pointerdown', () => {
-            if (this.grid === full && this.grid != correta){
-                cont_Verificar++;
-            }
-        });
-        
-        this.verificarBT = this.add.image(width * 0.10, height * 0.67, "Verificar");
-        this.verificarBT.setScale(0.6);
-        this.verificarBT.setInteractive({ useHandCursor: true });*/
+        this.createVirtualKeyboard();
     }
-
+    
     isPrime(n) {
         if (n <= 1) return false;
         if (n <= 3) return true;
@@ -139,6 +174,7 @@ class Game extends Phaser.Scene{
     createCrucigrama() {
         this.cellSize = 70;
         this.cellPadding = 150;
+        this.gridExtras = [];
 
         if (this.size === 3){
             this.gridScale = 1;
@@ -227,21 +263,25 @@ class Game extends Phaser.Scene{
                 case 1:
                     cell = this.add.image(cellX, cellY, "QuadradoNivel1");
                     cell.setScale(0.8 * this.gridScale); // Adjust scale as needed
+                    cell.baseScale = 0.8 * this.gridScale;
                     cell.setInteractive({ useHandCursor: true });
                     break;
                 case 2:
                     cell = this.add.image(cellX, cellY, "QuadradoNivel2");
                     cell.setScale(0.8 * this.gridScale); // Adjust scale as needed
+                    cell.baseScale = 0.8 * this.gridScale;
                     cell.setInteractive({ useHandCursor: true });
                     break;
                 case 3:
                     cell = this.add.image(cellX, cellY, "QuadradoNivel3");
                     cell.setScale(0.8 * this.gridScale); // Adjust scale as needed
+                    cell.baseScale = 0.8 * this.gridScale;
                     cell.setInteractive({ useHandCursor: true });
                     break;
                 default:
                     cell = this.add.image(cellX, cellY, "QuadradoNivel1");
                     cell.setScale(0.8 * this.gridScale); // Adjust scale as needed
+                    cell.baseScale = 0.8 * this.gridScale;
                     cell.setInteractive({ useHandCursor: true });
                 }
                 // Add number text (initially empty, player will fill)
@@ -315,17 +355,20 @@ class Game extends Phaser.Scene{
                 row_equals = 40;
             }
 
-            this.add.text(
+            const equalsText = this.add.text(
                 rowResultX - this.cellPadding - row_equals, rowResultY, 
                 '=', 
                 { fontSize: `${Math.round(24 * this.gridNumberOpScale)}px`, fontFamily: 'Arial Black', color: '#ffffff' }
             ).setOrigin(0.5);
+
             
-            this.add.text(
+            const resultText = this.add.text(
                 rowResultX-rowResultsAux, rowResultY,
                 puzzle.rowResults[row].toString(),
                 { fontSize: `${Math.round(24 * this.gridNumberOpScale)}px`, fontFamily: 'Arial Black', color: '#ffffff' }
             ).setOrigin(0.5);
+            
+            this.gridExtras.push(equalsText, resultText);
         }
         
         // Add column results (at the bottom of each column)
@@ -411,8 +454,9 @@ class Game extends Phaser.Scene{
                 }
                 
                 const numberButton = this.add.image(buttonX, buttonY, "Number" + numbers[row][col]).setScale(0.5).setInteractive({ useHandCursor: true });
+                numberButton.baseScale=0.5;
                 const buttonTextStyle = { fontSize: `${Math.round(28 * this.gridNumberOpScale)}px`, fontFamily: 'Arial', color: '#ffffff' };
-
+    
                 // Corrigido: usar o valor do botão (numbers[row][col]) em vez da posição
                 numberButton.on('pointerdown', () => {
                     if (this.selectedCell) {
@@ -449,6 +493,7 @@ class Game extends Phaser.Scene{
         const deleteButtonY = keyboardY + (3 * (buttonSize + buttonPadding));
         
         const deleteButton = this.add.image(deleteButtonX, deleteButtonY, "Apagar").setScale(0.5).setInteractive({ useHandCursor: true });
+        deleteButton.baseScale = 0.5;
         const deleteButtonTextStyle = { fontSize: `${Math.round(14 * this.gridNumberOpScale)}px`, fontFamily: 'Arial', color: '#ffffff' };
        
         deleteButton.on('pointerdown', () => {
@@ -461,14 +506,22 @@ class Game extends Phaser.Scene{
         });
         const verificarButtonX = keyboardX + (0.03 * (buttonSize + buttonPadding));
         const verificarButtonY = keyboardY + (3 * (buttonSize + buttonPadding));
-        const verificarButton = this.add.image(verificarButtonX, verificarButtonY, "Verificar").setScale(0.6).setInteractive({ useHandCursor: true });
+        this.verificarButton = this.add.image(verificarButtonX, verificarButtonY, "Verificar").setScale(0.6).setInteractive({ useHandCursor: true });
+        this.verificarButton.baseScale=0.6;
 
-        verificarButton.on('pointerdown', () => {
+        this.verificarButton.on('pointerdown', () => {
             if (this.isGridComplete()) {
                 if (this.validateUserSolution()) {
                     console.log("Parabéns! Você resolveu o crucigrama corretamente!");
                 } else {
-                    console.log("Solução incorreta. Tente novamente.");
+                    this.totalattempts += 1;
+                    if(this.totalattempts === 3){
+                        this.verificarButton.setTint(0x808080).setAlpha(0.5);
+                        this.verificarButton.disableInteractive();
+                        this.corrigirBT.clearTint().setAlpha(1);
+                        this.corrigirBT.setInteractive({ useHandCursor: true });
+                    }
+                    console.log("Solução incorreta. Tente novamente.", this.totalattempts);
                 }
             } else {
                 console.log("O crucigrama não está completo.");
@@ -538,10 +591,10 @@ class Game extends Phaser.Scene{
             
             // Fill the grid with numbers and operators
             // Defining important numbers first 
-            this.grid = Array.from({ length: this.gridSize }, () => Array(this.gridSize).fill(0));
+            this.grid = Array.from({ length: this.gridSize }, () => Array(this.gridSize).fill(null));
             for (let i = 0; i < this.gridSize; i += 2) {
-                this.grid[i][this.gridSize - 1] = Phaser.Math.Between(10, 99); // Row target
-                this.grid[this.gridSize - 1][i] = Phaser.Math.Between(10, 99); // Column target
+                this.grid[i][this.gridSize - 1] = Phaser.Math.Between(10, 90); // Row target
+                this.grid[this.gridSize - 1][i] = Phaser.Math.Between(10, 90); // Column target
             }
 
             for(let row = 0; row < this.gridSize-1; row++){
@@ -551,12 +604,10 @@ class Game extends Phaser.Scene{
                             this.grid[row][col] = this.getValidNumb(row, col);
                         }else{
                             this.grid[row][col] = this.getValidOp2(row, col); 
-                            //this.grid[row][col] = this.getValidOp(row, col); // Random operator
                         }
                     }else{
                         if(col % 2 === 0){
                             this.grid[row][col] = this.getValidOp2(row, col); 
-                            //this.grid[row][col] = this.getValidOp(row, col); // Random operator
                         }else{
                             this.grid[row][col] = null;
                         }
@@ -676,111 +727,96 @@ class Game extends Phaser.Scene{
     getValidNumb(row, col){
         let maxnum = 99;
         let minnum = 0;
+        let prevResult;
+        let expression;
+        // Taboada até onde podemos multiplicar
+        const maxmult = 10;
+
     
         // Checks if we have a - in either the line above or column to the left
-        let above = row > 0 && this.grid[row-1][col] === '-';
-        let behind = col > 0 && this.grid[row][col-1] === '-';
+        let abovesub = row > 0 && this.grid[row-1][col] === '-';
+        let behindsub = col > 0 && this.grid[row][col-1] === '-';
+        let abovesum = row > 0 && this.grid[row-1][col] === '+';
+        let behindsum = col > 0 && this.grid[row][col-1] === '+';
         
         // Will ensure there are no - which result in numbers below 0, to avoid negative numbers
-        if(behind){
+        if(behindsub){
             // If there's a subtraction to the left, the current number must be <= previous result
-            const prevResult = this.calcrow(row, col);
-            maxnum = Math.min(prevResult, maxnum);
+            expression = this.grabexpression(row, col, true);
+            prevResult = this.calculateVector(expression);
+            console.log("behind sub", expression, prevResult, row, col);
+            maxnum = Math.min(prevResult-1, maxnum);
             
             if(maxnum < 0) {
                 console.log("Warning: Preventing negative result from subtraction (left)");
                 maxnum = 0; // Clamp to ensure we don't generate negative numbers
             }
+
+        }else if(behindsum){
+            expression = this.grabexpression(row, col, true);
+            prevResult = this.calculateVector(expression);
+            console.log("behind sum", expression, prevResult, row, col);
+            maxnum = Math.min(99-prevResult, maxnum);
         }
-        
-        if(above){
+        if(abovesub){
             // If there's a subtraction above, the current number must be <= previous column result
-            const prevResult = this.calccol(row, col);
-            maxnum = Math.min(prevResult, maxnum);
-            
+            expression = this.grabexpression(row, col, false);
+            prevResult = this.calculateVector(expression);
+            maxnum = Math.min(prevResult-1, maxnum);
+            console.log("above sub", expression, prevResult, row, col);
             if(maxnum < 0) {
                 console.log("Warning: Preventing negative result from subtraction (above)");
                 maxnum = 0; // Clamp to ensure we don't generate negative numbers
             }
+
+        }else if(abovesum){
+            expression = this.grabexpression(row, col, false);
+            prevResult = this.calculateVector(expression);
+            console.log("above sum", expression, prevResult, row, col);
+            maxnum = Math.min(99-prevResult, maxnum);
         }
         
+        // Above restriction handles cases for - and + right behind or above
         // This restriction only occurs in diff 2
-        if(this.difficulty === 2){
+        if(this.difficulty === 2 || this.difficulty === 3){
+            // In diff 2 we can't allow multiplications that result in numbers above 55
+            // Thus ensure (assuming no numbers higher than 9 will have multiplications beside them)
+            // when multiplied these numbers dont result in anything higher than 55
             if(row > 0 && this.grid[row-1][col] === '×'){
-                if(this.grid[row-2][col] >= 7){
-                    maxnum = Math.min(Math.floor(55/this.grid[row-2][col]), maxnum);
-                    if(row > 2 && this.grid[row-3][col] === '-'){
-                        // Check if there is a - operation prior to the x to ensure that the result of the x operation will not compromise
-                        // the result of the - operation
-                        const prevResult = this.calcrow(row-4, col);
-                        maxnum = Math.min(Math.floor(prevResult/this.grid[row-2][col]), maxnum);
-                        
-                        if(maxnum < 0) maxnum = 0;
-                    }
-                }
-                
-                if(col > 0 && this.grid[row][col-1] === '×'){
-                    if(this.grid[row][col-2] >= 7){
-                        maxnum = Math.min(Math.floor(55/this.grid[row][col-2]), maxnum);
-                    }
-                    
-                    if(col > 2 && this.grid[row][col-3] === '-'){
-                        // Check if there is a - operation prior to the x to ensure that the result of the x operation will not compromise
-                        // the result of the - operation
-                        const prevResult = this.calccol(row, col-4);
-                        maxnum = Math.min(Math.floor(prevResult/this.grid[row][col-2]), maxnum);
-                        
-                        if(maxnum < 0) maxnum = 0;
-                    }
-                }
+                expression = this.grabexpression(row, col, false);
+                maxnum = Math.min(this.maxmultnumber(expression),maxnum);
+            }
+            if(col > 0 && this.grid[row][col-1] === '×'){
+                expression = this.grabexpression(row, col, true);
+                maxnum = Math.min(this.maxmultnumber(expression),maxnum);
             }
         }
-        else if(this.difficulty === 3){
-            if(col > 3 && this.grid[row][col-3] === '-' && this.grid[row][col-1] === '×'){
-                const prevResult = this.calccol(row, col-4);
-                maxnum = Math.min(Math.floor((prevResult+1)/this.grid[row][col-2]), maxnum);
-                
-                if(maxnum < 0) maxnum = 0;
-            }
-            
-            if(row > 3 && this.grid[row-3][col] === '-' && this.grid[row-1][col] === '×'){
-                const prevResult = this.calcrow(row-4, col);
-                maxnum = Math.min(Math.floor((prevResult+1)/this.grid[row-2][col]), maxnum);
-                
-                if(maxnum < 0) maxnum = 0;
-            }
-        }
-        
-        // Ensure maxnum is never negative
-        maxnum = Math.max(0, maxnum);
-        
-        // Make a list of numbers from 0 to maxnum
+
+        // Make a list with all the numbers allowed (Based on current maxnum) so we can use filters
         let possibleNumbers = [];
-        for(let i = 0; i <= maxnum; i++){
+        for(let i = 1; i <= maxnum; i++){
             possibleNumbers.push(i);
         }
-        
-        // Handle division operations to prevent infinite decimals
-        if(this.difficulty === 3){
-            let divabove = row > 0 && this.grid[row-1][col] === '÷';
-            let divbehind = col > 0 && this.grid[row][col-1] === '÷';
-            
-            if(divabove){
-                // Check if the number is divisible by the number above
-                let dividend = this.checklastmultdivCol(row-2, col);
-                
-                // Filter for numbers that can cleanly divide the dividend (avoid 0)
-                possibleNumbers = possibleNumbers.filter(num => num > 0 && dividend % num === 0);
+
+        if(this.difficulty === 3) {
+            // In diff 3 we follow the same restriction as diff 2 allowing and making sure we handle cases
+            // in which we handle numbers higher than 10 while not allowing them to be over 100 after 
+            // being multiplied , also add restrictions to ensure no divisions that result in non-ints
+            // Mults were already handled in the prior if, handle the divisions here
+            if(row > 1 && this.grid[row-1][col] === '÷'){
+                // When in a division we must simply ensure the numbers we're allowing
+                // wont result in non-ints and ensure no number added after a '÷' is higher than 10
+                expression = this.grabexpression(row-1, col, false);
+                let dividend = this.checklastmultdiv(expression);
+                possibleNumbers = possibleNumbers.filter(num => num > 1 && dividend % num === 0 && num < 10);
             }
-            
-            if(divbehind){
-                let dividend = this.checklastmultdivRow(row, col-2);
-                
-                // Filter for numbers that can cleanly divide the dividend (avoid 0)
-                possibleNumbers = possibleNumbers.filter(num => num > 0 && dividend % num === 0);
+            if(col > 1 && this.grid[row][col-1] === '÷'){
+                expression = this.grabexpression(row, col-1, true);
+                let dividend = this.checklastmultdiv(expression);
+                possibleNumbers = possibleNumbers.filter(num => num > 1 && dividend % num === 0 && num < 10);
             }
         }
-        
+
         // If no possible numbers left (could happen with division constraints)
         if(possibleNumbers.length === 0){
             console.log("No possible numbers with current constraints. Using fallback.");
@@ -795,65 +831,83 @@ class Game extends Phaser.Scene{
         let num = Phaser.Math.RND.pick(possibleNumbers);
         return num;
     }
-    // TO DO , change both of these so that instead of calculating
-    // they simply put the whole row or column in a string so we can calculate it
-    // properly making sure to multiply and divide first, then add and subtract 
-    // DONE
 
-    // Used to calculate the result of all operations up until the - we encountered
-    calcrow(row, col){
-        let expression = this.grid[row].slice(0, col-1);
-        let result = this.calculateVector(expression);
-        return result;
-    }
-
-    // Used to calculate the result of all operations up until the - we encountered
-    calccol(row, col){
-        let expression = [];
-        for (let i = 0; i < row-1; i++) {
-            expression.push(this.grid[i][col]);
+    maxmultnumber(expression){
+        let maxmul;
+        let maxnum = 99;
+        switch (this.difficulty) {
+            case 2:
+                maxmul = 55;
+            case 3:
+                maxmul = 90;
         }
-        let result = this.calculateVector(expression);
+        maxnum = Math.min(Math.floor(maxmul/this.checklastmultdiv(expression)), maxnum);
+        if ( expression.length > 3 ) { 
+            let mfactor = this.checklastmultdiv(expression);
+            let priornum = this.checkfirstexpression(expression);
+            let priorop = this.prevNonMulexpression(expression);
+            switch (priorop){
+                case '-':
+                    maxnum = Math.min(Math.floor((100 - priornum) / mfactor),maxnum);
+                case '+':
+                    maxnum = Math.min(Math.floor(priornum / mfactor),maxnum);
+            }
+        }
+        return maxnum
+    }
+
+    grabexpression(row, col, line){
+        let expression = [];
+        if (line) {
+            expression = this.grid[row].slice(0, col);
+        } else {
+            for (let i = 0; i < row; i++) {
+                expression.push(this.grid[i][col]);
+            }
+        }
+        //console.log("Grabbed expression ",expression,"at ", row, col);
+        return expression;
+    }
+
+    // Used to get the result of the last set of uninterrupted multiplications/divisions
+    checklastmultdiv(expression){
+        let result = 0;
+        let subExpression = [...expression];
+        for (let i = expression.length; i >= 0; i--) {
+            if (subExpression[i] === '-' || subExpression[i] === '+') {
+                // We found a + or - operation, we can now calculate the result of the last multiplication/division
+                subExpression = subExpression.slice(i + 1, subExpression.length);
+                break;
+            }
+        }
+        result = this.calculateVector(subExpression);
         return result;
     }
 
-
-    // These functions will help calculate the result of the last sub-equation containing multiplications and divisions
-    checklastmultdivRow(row, col){
+    checkfirstexpression(expression){
         let result = 0;
-        let expression = this.grid[row].slice(0, col+1);
-        console.log("expression", expression);
-        // We read a string from the back to the front, until we find a + or - operation
-        // We proceed to delete the rest of the string
+        let subExpression = [...expression];
         for (let i = expression.length; i >= 0; i--) {
             if (expression[i] === '-' || expression[i] === '+') {
                 // We found a + or - operation, we can now calculate the result of the last multiplication/division
-                expression = expression.slice(i + 1,expression.length);
+                subExpression = subExpression.slice(0,i + 1);
                 break;
             }
         }
         result = this.calculateVector(expression);
-        console.log("subExpression", expression, result);
+        //console.log("checkfirstexpressioncol subExpression", expression, result, subExpression);
         return result;
     }
-    
-    checklastmultdivCol(row, col){
-        let result = 0;
-        let expression = [];
-        for (let i = 0; i < row+1; i++) {
-            expression.push(this.grid[i][col]);
-        }
-        console.log("expression", expression);
+
+
+    prevNonMulexpression(expression){
         for (let i = expression.length; i >= 0; i--) {
             if (expression[i] === '-' || expression[i] === '+') {
                 // We found a + or - operation, we can now calculate the result of the last multiplication/division
-                expression = expression.slice(i + 1,expression.length);
-                break;
+                return expression[i];
             }
         }
-        result = this.calculateVector(expression);
-        console.log("subExpression", expression, result);
-        return result;
+        return '+';
     }
 
     // This function will calculate the result of a list of ints and operators making sure to multiply and divide first    
@@ -866,7 +920,7 @@ class Game extends Phaser.Scene{
         
         // First pass: handle multiplication and division
         for (let i = 1; i < calcList.length - 1; i += 2) {
-            if (calcList[i] === '' || calcList[i] === '÷') {
+            if (calcList[i] === '×' || calcList[i] === '÷') {
                 // For division, ensure we're not dividing by zero
                 if (calcList[i] === '÷' && calcList[i+1] === 0) {
                     console.error("Division by zero detected!");
@@ -875,7 +929,7 @@ class Game extends Phaser.Scene{
                 
                 // For division, ensure we get an integer result
                 if (calcList[i] === '÷' && calcList[i-1] % calcList[i+1] !== 0) {
-                    console.error("Non-integer division:", calcList[i-1], "÷", calcList[i+1]);
+                    //console.error("Non-integer division:", calcList[i-1], "÷", calcList[i+1]);
                     // Adjust the dividend to ensure clean division
                     calcList[i-1] = calcList[i+1] * Math.floor(calcList[i-1] / calcList[i+1]);
                 }
@@ -901,121 +955,79 @@ class Game extends Phaser.Scene{
         return Math.max(0, result);
     }
     
-
-
-    getValidOp(row, col){
-        const maxConsecutiveOps = {
-            '+': 2,
-            '-': 2,
-            '×': 2,
-            '÷': 2
-        };
-        const consecutiveOpsCount = {
-            '+': 0,
-            '-': 0,
-            '×': 0,
-            '÷': 0
-        };
-
-        if(col > 1 && row % 2 === 0){
-            let prevOp = null;
-            for(let c = col - 2; c >=1; c -=2){
-                const op = this.grid[row][c];
-                if(op === prevOp || prevOp === null){
-                    prevOp = op;
-                    consecutiveOpsCount[op]++;
-                }else{
-                    break;
-                }
-            }
-        }
-        if(row > 1 && col % 2 === 0){
-            let prevOp = null;
-            for(let r = row - 2; r >= 1; r -= 2){
-                const op = this.grid[r][col];
-                if(op === prevOp || prevOp === null){
-                    prevOp = op;
-                    consecutiveOpsCount[op]++;
-                }
-                else{
-                    break;
-                }
-            }
-        }
-        let availableOps = [...this.operators];
-        for(const [op, count] of Object.entries(consecutiveOpsCount)){
-            if(count >= maxConsecutiveOps[op]){
-                availableOps = availableOps.filter(o => o !== op);
-            }
-        }
-        if(availableOps.length === 0){
-            console.log("No valid operators available. Defaulting to '+'.");
-            return '+'; // Default to addition if no valid operators are available
-        }
-        return Phaser.Math.RND.pick(availableOps);
-    }
-
-
     getValidOp2(row, col){
         //contas para perceber se estamos em coluna ou linha
         let size = this.gridSize;
         let line = (row % 2 === 0);
-        let currentresult = 0;
         let wantedresult = 0;
         let availableOps = [...this.operators];  
+        let flipped = false;
+        let expression = this.grabexpression(row, col,  line);
+        let currentresult = this.calculateVector(expression);
+
+
         if(line){
-            //Estamos numa linha 
-            currentresult = this.calcrow(row,col+1);
             wantedresult = this.grid[row][size-1];
-            console.log(row,col,this.grid[row][col-1],currentresult,wantedresult)
-        }else{
-            //Estamos numa coluna
-            currentresult = this.calccol(row+1,col);
+        } else {
             wantedresult = this.grid[size-1][col];
-            console.log(row,col,this.grid[row-1][col],currentresult,wantedresult)
         }
+        if(expression.length > 2 && expression[expression.length-2]==='-'){
+            // Cuida do caso em que temos X-Y entao nao podemos colocar um x depois do Y pois vamos diminuir ainda mais o resultado
+            flipped = true;
+        }
+
+        console.log("getvalidop2 ", expression,currentresult,wantedresult);
         if(currentresult<=wantedresult){
-            availableOps = availableOps.filter(op => ['+','×'].includes(op));
+            if(!flipped){
+                availableOps = availableOps.filter(op => ['+','×'].includes(op));
+            }else{
+                availableOps = availableOps.filter(op => ['+','÷'].includes(op));
+            }
         }else{
-            availableOps = availableOps.filter(op => ['-','÷'].includes(op));
-            if(availableOps.includes('÷')){
-                let isPrime;
-                if(line){
-                    isPrime = this.isPrime(this.checklastmultdivRow(row,col+1));
-                }else{
-                    isPrime = this.isPrime(this.checklastmultdivCol(row+1,col));
-                }
-                if(isPrime){
-                    availableOps = availableOps.filter(op => op !== '÷');
-                    console.log("removed a division",row,col)
-                }
+            if(!flipped){
+                availableOps = availableOps.filter(op => ['-','÷'].includes(op));
+            }else{
+                availableOps = availableOps.filter(op => ['-','×'].includes(op));
+            }
+        }
+        
+        if(availableOps.includes('÷')){
+            let isPrime = this.isPrime(this.checklastmultdiv(expression));
+            if(isPrime){
+                availableOps = availableOps.filter(op => op !== '÷');
+                //console.log("removed a division", row, col, expression, availableOps);
+            }
+        }else if(availableOps.includes('×')){
+            let multthreshhold = false;
+            // Highest number which should have a mult operation beside it (This will be the first number in the operation
+            // so for X*Y this determines how high we allow X to be before we dont allow * to be placed beside X)
+            let maxmultthreshhold = 20;
+            let value = this.checklastmultdiv(expression)
+            if (value<1 || value>maxmultthreshhold) {
+                multthreshhold = true;
+            }
+            if(multthreshhold){
+                availableOps = availableOps.filter(op => op !== '×');
+                //console.log("removed a multiplication", row, col, expression, availableOps);
             }
         }
         let operator = Phaser.Math.RND.pick(availableOps);
         return operator;
     }
-/*
-0: (6) [4, '-', 0, '-', 1, 0]
-1: (6) ['+', null, '+', null, '+', null]
-2: (6) [3, '-', 8, '-', 3, 0]
-3: (6) ['+', null, '-', null, '-', null]
-4: (6) [2, '-', 9, '-', 1, 0]
-5: (6) [0, 0, 0, 0, 0, 0]
-*/
-
 
     calculateResults(){
         this.rowResults = [];
         this.colResults = [];
         let size = this.gridSize/2;
-        console.log("ESTE È O SIZE DA GRID", this.gridSize,size);
         console.log("calculating results");
         for (let row = 0; row < size; row++){
-            let result = this.calcrow(row*2, this.gridSize);
+            let expression = this.grabexpression(row*2, this.gridSize-1, true);
+            let result = this.calculateVector(expression);
             this.rowResults.push(result);
         }
         for (let col = 0; col < size; col++){
-            let result = this.calccol(this.gridSize, col*2);
+            let expression = this.grabexpression(this.gridSize-1, col*2, false);
+            let result = this.calculateVector(expression);
             this.colResults.push(result);
         }
     }
@@ -1158,14 +1170,14 @@ class Game extends Phaser.Scene{
         // Highlight the selected cell (you'd need a highlighted version of the cell sprite)
         this.highlightSelectedCell();
     }
-    
+
     ClearSelectedCell() {
         if (this.selectedCell){
             this.selectedCell = null;
         }
     }
 
-
+    
     highlightSelectedCell() {
         // Remove highlight from all cells
         for (let row = 0; row < this.size; row++) {
@@ -1179,5 +1191,56 @@ class Game extends Phaser.Scene{
             const { row, col } = this.selectedCell;
             this.cells[row][col].sprite.setTint(0xffff00); // Yellow tint
         }
+    }
+    
+    
+    clearGrid() {
+        // Remove all cell sprites and texts
+        if (this.cells) {
+            for (let row of this.cells) {
+                for (let cell of row) {
+                    if (cell && cell.sprite) cell.sprite.destroy();
+                    if (cell && cell.text) cell.text.destroy();
+                }
+            }
+        }
+    
+        // Clear operator texts
+        if (this.horizontalOps) {
+            for (let row of this.horizontalOps) {
+                for (let op of row) {
+                    if (op && op.text) op.text.destroy();
+                }
+            }
+        }
+    
+        if (this.verticalOps) {
+            for (let row of this.verticalOps) {
+                for (let op of row) {
+                    if (op && op.text) op.text.destroy();
+                }
+            }
+        }
+    
+        // Remove row/col result texts
+        this.children.list = this.children.list.filter(obj => {
+            if (obj.type === 'Text' && !obj.texture) {
+                // Only keep non-grid texts like buttons
+                return false;
+            }
+            return true;
+        });
+
+        // Destroy equal signs and result texts
+        if (this.gridExtras) {
+            for (let item of this.gridExtras) {
+                item?.destroy();
+            }
+        }
+    
+        this.cells = [];
+        this.horizontalOps = [];
+        this.verticalOps = [];
+        this.userGrid = [];
     }
 }
