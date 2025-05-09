@@ -78,7 +78,7 @@ class Game extends Phaser.Scene{
         this.corrigirBT = this.add.image(width * 0.32, height * 0.81, "Corrigir");
         this.corrigirBT.setScale(0.68);
         this.corrigirBT.baseScale = 0.68;
-        this.corrigirBT.setInteractive({ useHandCursor: true });
+        //this.corrigirBT.setInteractive({ useHandCursor: true });
         this.corrigirBT.setTint(0x808080).setAlpha(0.5);
         
         this.voltarBT = this.add.image(width * 0.24, height * 0.85, "Voltar");
@@ -367,7 +367,7 @@ class Game extends Phaser.Scene{
                 puzzle.rowResults[row].toString(),
                 { fontSize: `${Math.round(24 * this.gridNumberOpScale)}px`, fontFamily: 'Arial Black', color: '#ffffff' }
             ).setOrigin(0.5);
-            
+
             this.gridExtras.push(equalsText, resultText);
         }
         
@@ -389,17 +389,19 @@ class Game extends Phaser.Scene{
                 col_equals = 40;
             }
 
-            this.add.text(
+            const equalsText = this.add.text(
                 colResultX, colResultY - this.cellPadding-col_equals , 
                 '=', 
                 { fontSize: `${Math.round(24 * this.gridNumberOpScale)}px`, fontFamily: 'Arial Black', color: '#ffffff' }
             ).setOrigin(0.5).setAngle(90);
             
-            this.add.text(
+            const resultText = this.add.text(
                 colResultX, colResultY-colResultsAux,
                 puzzle.colResults[col].toString(),
                 { fontSize: `${Math.round(24 * this.gridNumberOpScale)}px`, fontFamily: 'Arial Black', color: '#ffffff' }
             ).setOrigin(0.5);
+
+            this.gridExtras.push(equalsText, resultText);
         }
 
         let filledCells = 0;
