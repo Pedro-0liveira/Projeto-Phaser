@@ -294,6 +294,8 @@ class Menu extends Phaser.Scene{
                         fadeIn(this.qdlogin);
                         fadeIn(this.fecharBTlog);
                         fadeIn(this.OkBTlog);
+                        this.userbox.visible = true;
+                        this.passbox.visible = true;
                         grayIn(this.loginBT);
                         resetscale(this.loginBT);        
                         disableInteract(nonloginbuttons);
@@ -309,6 +311,8 @@ class Menu extends Phaser.Scene{
                         fadeOut(this.qdlogin);
                         fadeOut(this.fecharBTlog);
                         fadeOut(this.OkBTlog);
+                        this.userbox.visible = false;
+                        this.passbox.visible = false;
                         grayOut(this.loginBT);
                         resetscale(this.fecharBTlog);
                         resetscale(this.loginBT);
@@ -320,6 +324,15 @@ class Menu extends Phaser.Scene{
                     break;
                 case this.OkBTlog:
                     //if (verificar que tem alguma coisa nas caixas)
+                    let user = this.userbox.getChildByName("username").value;
+                    let password = this.passbox.getChildByName("password").value;
+                    console.log(user,password);
+                    if (user != '' && password != '') {
+                        // AQUI ESTA A LINHA USAR COM CUIDADO
+                        //let loggedin = login(user, password,this);
+                        this.user.getChildByName("username").value = '';
+                        this.password.getChildByName("password").value = '';
+                    }
                     // tentar o login e armazenar valor e informaçoes da conta
                     loggedin = 1;
                     if (loggedin == 0){
@@ -329,6 +342,8 @@ class Menu extends Phaser.Scene{
                         fadeOut(this.qdlogin);
                         fadeOut(this.fecharBTlog);
                         fadeOut(this.OkBTlog);
+                        this.userbox.visible = false;
+                        this.passbox.visible = false;
                         grayOut(this.loginBT);
                         resetscale(this.fecharBTlog);
                         resetscale(this.loginBT);
