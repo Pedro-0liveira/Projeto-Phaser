@@ -437,7 +437,22 @@ class Game extends Phaser.Scene{
     createCheck(row, col) {
         let cellX = this.cells[row][col].CellX;
         let cellY = this.cells[row][col].CellY;
-        let check = this.add.image(cellX + 65, cellY - 40, "check").setScale(0.35);
+        let scale;
+        if (this.size === 3){
+            cellX += 65;
+            cellY -= 50;
+            scale = 0.40;
+        } else if (this.size === 4){
+            cellX += 60;
+            cellY -= 40;
+            scale = 0.30;
+        } else {
+            cellX += 40;
+            cellY -= 30;
+            scale = 0.25;
+        }
+
+        let check = this.add.image(cellX, cellY, "check").setScale(scale);
         console.log("Check created at:", cellX, cellY);
         this.gridExtras.push(check);
     }
