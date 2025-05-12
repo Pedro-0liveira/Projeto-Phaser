@@ -10,6 +10,12 @@ let size;
 let BTlock;
 let loggedin;
 
+var nome;
+var nome2;
+
+var percentagem = 0;
+var callOnce = 0;
+
 class Menu extends Phaser.Scene{
     constructor(){
         super("Menu");
@@ -141,17 +147,20 @@ class Menu extends Phaser.Scene{
         this.OkBTlog.setScale(scale);
         this.OkBTlog.setInteractive({ useHandCursor: true });
 
+        this.ola = this.add.text(0.82 * game.config.width ,0.25 * game.config.height, nome2,{ fontFamily: 'font1',fontSize: 35,color: '#641602',align: 'center'});
+        this.ola.visible = false;
+
         let user = `
         <input type="text" name="username" style="font-size: 50px;font-family:'font1';text-align:center;">`;
         let pass = `
         <input type="password" name="password" style="font-size:50px;font-family:'font1';text-align:center;">`;      
               
         //Caixas de texto
-        this.userbox = this.add.dom(0.533 * game.config.width, 0.44 * game.config.height).createFromHTML(user);
-        this.userbox.setScale(0.7);
+        this.userbox = this.add.dom(0.521 * game.config.width, 0.437 * game.config.height).createFromHTML(user);
+        this.userbox.setScale(0.64);
         this.userbox.visible = false;
-        this.passbox = this.add.dom(0.53 * game.config.width, 0.61 * game.config.height).createFromHTML(pass);
-        this.passbox.setScale(0.7);
+        this.passbox = this.add.dom(0.518 * game.config.width, 0.575 * game.config.height).createFromHTML(pass);
+        this.passbox.setScale(0.64);
         this.passbox.visible = false;
         
         this.loginErrorMsg = this.add.text(0.4 * game.config.width, 0.635 * game.config.height,"Utilizador ou Password Errados",{ fontFamily: 'font1',fontSize: 30,color: '#ff0000',align: 'center'});
@@ -161,12 +170,12 @@ class Menu extends Phaser.Scene{
         const nonloginbuttons = [this.boneco, this.nivel1BT, this.nivel2BT, this.nivel3BT, this.tam3BT, this.tam4BT,
             this.tam5BT, this.infoBT, this.credBT, this.maxBT, this.minBT, this.voltarBT];
         const loginbuttons =    [this.OkBTlog, this.fecharBTlog];
-        
+        /*
         this.debugText = this.add.text(10, 10, '', { fontSize: '16px', fill: '#fff' }).setVisible(false);
         this.input.keyboard.on('keydown-D', () => {
             debugMode = !debugMode;
             this.debugText.setVisible(debugMode);
-        });
+        });*/
 
         //Funcionalidade BTs
         this.input.on('gameobjectover',function(pointer, gameObject) {
@@ -327,15 +336,16 @@ class Menu extends Phaser.Scene{
                     let user = this.userbox.getChildByName("username").value;
                     let password = this.passbox.getChildByName("password").value;
                     console.log(user,password);
+                    let loggedin = 0;
+
                     if (user != '' && password != '') {
                         // AQUI ESTA A LINHA USAR COM CUIDADO
-                        //let loggedin = login(user, password,this);
-                        this.user.getChildByName("username").value = '';
-                        this.password.getChildByName("password").value = '';
+                        loggedin = login(user, password,this);
+                        this.userbox.getChildByName("username").value = '';
+                        this.passbox.getChildByName("password").value = '';
                     }
                     // tentar o login e armazenar valor e informaçoes da conta
-                    loggedin = 1;
-                    if (loggedin == 0){
+                    if (loggedin === -1){
                         this.loginErrorMsg.visible = true;
                     }else{
                         this.loginBTpressed = !this.loginBTpressed;
@@ -361,11 +371,12 @@ class Menu extends Phaser.Scene{
                     loggedin = 0;
                     this.logoutBT.visible = false;
                     this.loginBT.visible = true;
+                    infoUser.logout();
+                    nome2 = undefined;
                     break;
             }
         },this);
     }
     update(){
-
     }
 }

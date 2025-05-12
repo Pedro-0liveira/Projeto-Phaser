@@ -22,12 +22,15 @@
     </head>
         <body>
             <div>
+                <script src = "jquery.js"> </script>
+                <script src = "lib/backEndconnector.js"></script>
+                <script src = "lib/logininfo.js"></script>
                 <script src="phaser.js"></script>
+                <script src="pleaseRotate.js"></script>
                 <script src="Menu.js"></script>
                 <script src="Game.js"></script>
                 <script src="Creditos.js"></script>
                 <script src="Info.js"></script>
-                <script src="pleaseRotate.js"></script>
             </div>
         </body>
 </html>
@@ -55,4 +58,5 @@
         scene: [Menu, Game, Creditos, Info],
     }
     var game = new Phaser.Game(config);
+    var infoUser = new loginInfo();
 </script>

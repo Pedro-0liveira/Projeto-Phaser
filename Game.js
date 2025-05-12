@@ -26,6 +26,7 @@ class Game extends Phaser.Scene{
         this.load.image("Apagar", "sprites/apagarnumber.png");
         this.load.image("Corrigir", "sprites/corrige.png");
         this.load.image("Verificar", "sprites/verifica.png");
+        this.load.image("check", "sprites/btok.png");
         //this.load.image("Retry", ""); //temp
     }
     
@@ -125,6 +126,8 @@ class Game extends Phaser.Scene{
         this.regenBT.on('pointerdown', () => {
             this.clearGrid();
             this.createCrucigrama();
+            this.corrigirBT.disableInteractive();
+            this.corrigirBT.setTint(0x808080).setAlpha(0.5);
         });
         
         //Funcionalidade BTs
@@ -293,7 +296,9 @@ class Game extends Phaser.Scene{
                     sprite: cell,
                     text: cellText,
                     value: null, // Player will fill this
-                    correctValue: puzzle.grid[row*2][col*2] // The correct answer
+                    correctValue: puzzle.grid[row*2][col*2], // The correct answer
+                    CellX: cellX,
+                    CellY: cellY,               
                 };
                 
                 // Add cell selection handling
@@ -429,6 +434,14 @@ class Game extends Phaser.Scene{
         }
     }
 
+    createCheck(row, col) {
+        let cellX = this.cells[row][col].CellX;
+        let cellY = this.cells[row][col].CellY;
+        let check = this.add.image(cellX + 65, cellY - 40, "check").setScale(0.35);
+        console.log("Check created at:", cellX, cellY);
+        this.gridExtras.push(check);
+    }
+
     createVirtualKeyboard(){
         const buttonSize = 100;
         const buttonPadding = 60;
@@ -506,8 +519,10 @@ class Game extends Phaser.Scene{
                 cell.text.setText('');
             }
         });
+
         const verificarButtonX = keyboardX + (0.03 * (buttonSize + buttonPadding));
         const verificarButtonY = keyboardY + (3 * (buttonSize + buttonPadding));
+
         this.verificarButton = this.add.image(verificarButtonX, verificarButtonY, "Verificar").setScale(0.6).setInteractive({ useHandCursor: true });
         this.verificarButton.baseScale=0.6;
 
@@ -518,8 +533,6 @@ class Game extends Phaser.Scene{
                 } else {
                     this.totalattempts += 1;
                     if(this.totalattempts === 3){
-                        this.verificarButton.setTint(0x808080).setAlpha(0.5);
-                        this.verificarButton.disableInteractive();
                         this.corrigirBT.clearTint().setAlpha(1);
                         this.corrigirBT.setInteractive({ useHandCursor: true });
                     }
@@ -529,9 +542,26 @@ class Game extends Phaser.Scene{
                 console.log("O crucigrama não está completo.");
             }
         });
+        
+        this.corrigirBT.on('pointerdown', () => {
+            for (let row = 0; row < this.size; row++){
+                for (let col = 0; col < this.size; col++){
+                    if (!this.cells[row][col].locked){
+                        const cell = this.cells[row][col];
+                        cell.text.setText(cell.correctValue.toString());
+                        cell.locked = true;
+                        this.createCheck(row, col);
+                    } else {
+                        this.createCheck(row, col);
+                    }
+                }
+            }
+            this.corrigirBT.disableInteractive();
+        });
     }
     
     validateUserSolution() {
+        this.ClearSelectedCell();
         const userRowResults = [];
         const userColResults = [];
     
@@ -560,9 +590,29 @@ class Game extends Phaser.Scene{
         const colsMatch = JSON.stringify(userColResults) === JSON.stringify(this.colResults);
     
         if (rowsMatch && colsMatch) {
+            // Lock the cells that are correct
+            for (let row = 0; row < this.size; row++) {
+                for (let col = 0; col < this.size; col++) {
+                    if (this.cells[row][col].correctValue === this.cells[row][col].value) {
+                        this.cells[row][col].locked = true;
+                        this.createCheck(row, col);
+                    }
+                }
+            }
+            this.verificarButton.disableInteractive();
             console.log("User solution is correct!");
             return true;
         } else {
+            for (let row = 0; row < this.size; row++) {
+                for (let col = 0; col < this.size; col++) {
+                    if (!this.cells[row][col].locked){
+                        if (this.cells[row][col].correctValue === this.cells[row][col].value){
+                            this.cells[row][col].locked = true;
+                            this.createCheck(row, col);
+                        }
+                    }
+                }
+            }
             console.log("User solution is incorrect.");
             console.log("Expected row results:", this.rowResults, "User row results:", userRowResults);
             console.log("Expected column results:", this.colResults, "User column results:", userColResults);
@@ -1175,6 +1225,8 @@ class Game extends Phaser.Scene{
 
     ClearSelectedCell() {
         if (this.selectedCell){
+            const { row, col } = this.selectedCell;
+            this.cells[row][col].sprite.clearTint(); // Reset tint
             this.selectedCell = null;
         }
     }
