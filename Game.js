@@ -547,11 +547,12 @@ class Game extends Phaser.Scene{
             for (let row = 0; row < this.size; row++){
                 for (let col = 0; col < this.size; col++){  
                     if (!this.cells[row][col].locked){
-                        let cell = this.cells[row][col];
-                        this.cells[row][col].text.setText(cell.correctValue.toString());
-                        if (this.cells[row][col].Resposta !== undefined){
-                            this.cells[row][col].Resposta.destroy(); 
+                        //let cell = this.cells[row][col];
+                        this.cells[row][col].text.setText(this.cells[row][col].correctValue.toString());
+                        if (this.cells[row][col].Resposta !== undefined || this.cells[row][col].Resposta !== null){
+                            console.log(this.cells[row][col].Resposta);
                             this.cells[row][col].Resposta.visible = false;
+                            this.cells[row][col].Resposta.destroy(); 
                             console.log("Resposta destruída");   
                         }
                         this.cells[row][col].locked = true;
@@ -676,6 +677,7 @@ class Game extends Phaser.Scene{
 
         if (this.cells[row][col].Resposta){
             this.cells[row][col].Resposta.destroy();
+            this.cells[row][col].Resposta = null;
         }
         this.cells[row][col].Resposta = this.add.image(cellX, cellY, "Certo").setScale(scale);
         console.log("Check created at:", cellX, cellY);
@@ -708,9 +710,12 @@ class Game extends Phaser.Scene{
             cellY -= 30;
             scale = 0.25;
         }
-        
-        this.cells[row][col].Resposta = this.add.image(cellX, cellY, "Errado").setScale(scale);
-        console.log("Check created at:", cellX, cellY);
+        if(!this.cells[row][col].Resposta){
+            this.cells[row][col].Resposta = this.add.image(cellX, cellY, "Errado").setScale(scale);
+            console.log("Error created at:", cellX, cellY);
+        } else {
+            console.log("Error already exists");
+        }
     }
 
     generatePuzzle() {
@@ -1331,12 +1336,26 @@ class Game extends Phaser.Scene{
     
     clearGrid() {
         // Remove all cell sprites and texts
+        /*
         if (this.cells) {
             for (let row of this.cells) {
                 for (let cell of row) {
                     if (cell && cell.sprite) cell.sprite.destroy();
                     if (cell && cell.text) cell.text.destroy();
                     if (cell && cell.Resposta) cell.Resposta.destroy();
+                }
+            }
+        }
+        */
+        if (this.cells){
+            for (let row = 0; row < this.size; row++) {
+                for (let col = 0; col < this.size; col++) {
+                    if (this.cells[row][col] && this.cells[row][col].sprite) this.cells[row][col].sprite.destroy();
+                    if (this.cells[row][col] && this.cells[row][col].text) this.cells[row][col].text.destroy();
+                    if (this.cells[row][col] && this.cells[row][col].Resposta) {
+                        this.cells[row][col].Resposta.destroy();
+                        this.cells[row][col].Resposta = null;
+                    }
                 }
             }
         }
