@@ -271,7 +271,7 @@ class Game extends Phaser.Scene{
                 const cellY = startY + (row * (this.cellSize + this.cellPadding));
                 
                 let cell;
-                let resposta;
+                let resposta = null;
                 // Create the cell (pentagon sprite)
                 switch(this.difficulty) {
                 case 1:
@@ -549,7 +549,7 @@ class Game extends Phaser.Scene{
                     if (!this.cells[row][col].locked){
                         //let cell = this.cells[row][col];
                         this.cells[row][col].text.setText(this.cells[row][col].correctValue.toString());
-                        if (this.cells[row][col].Resposta !== undefined || this.cells[row][col].Resposta !== null){
+                        if (this.cells[row][col].Resposta !== undefined && this.cells[row][col].Resposta !== null){
                             console.log(this.cells[row][col].Resposta);
                             this.cells[row][col].Resposta.visible = false;
                             this.cells[row][col].Resposta.destroy(); 
