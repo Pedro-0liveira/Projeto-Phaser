@@ -26,7 +26,8 @@ class Game extends Phaser.Scene{
         this.load.image("Apagar", "sprites/apagarnumber.png");
         this.load.image("Corrigir", "sprites/corrige.png");
         this.load.image("Verificar", "sprites/verifica.png");
-        this.load.image("check", "sprites/btok.png");
+        this.load.image("Certo", "sprites/btok.png");
+        this.load.image("Errado", "sprites/btnotok.png");
         //this.load.image("Retry", ""); //temp
     }
     
@@ -102,6 +103,12 @@ class Game extends Phaser.Scene{
         this.regenBT.baseScale = 0.9;
         this.regenBT.setInteractive({ useHandCursor: true });
         
+        this.certo = this.add.image(width * 0.9, height * 0.85, "Certo").setScale(0.9);
+        this.certo.visible = false;
+        this.errado = this.add.image(width * 0.9, height * 0.85, "Errado").setScale(0.9);
+        this.errado.visible = false;
+
+
         this.credBT.on('pointerdown', () => {
             this.scene.start("creditos");
         });
@@ -128,6 +135,9 @@ class Game extends Phaser.Scene{
             this.createCrucigrama();
             this.corrigirBT.disableInteractive();
             this.corrigirBT.setTint(0x808080).setAlpha(0.5);
+            this.errado.visible = false;
+            this.certo.visible = false;
+            this.totalattempts = 0;
         });
         
         //Funcionalidade BTs
@@ -261,6 +271,7 @@ class Game extends Phaser.Scene{
                 const cellY = startY + (row * (this.cellSize + this.cellPadding));
                 
                 let cell;
+                let resposta;
                 // Create the cell (pentagon sprite)
                 switch(this.difficulty) {
                 case 1:
@@ -298,7 +309,8 @@ class Game extends Phaser.Scene{
                     value: null, // Player will fill this
                     correctValue: puzzle.grid[row*2][col*2], // The correct answer
                     CellX: cellX,
-                    CellY: cellY,               
+                    CellY: cellY,
+                    Resposta: resposta,
                 };
                 
                 // Add cell selection handling
@@ -426,35 +438,12 @@ class Game extends Phaser.Scene{
                 if (cell.value === null) {
                     cell.value = cell.correctValue; // Define o valor interno
                     cell.text.setText(cell.correctValue.toString()); // Atualiza o texto visível
-                    cell.sprite.setInteractive(false); // Desabilita a interação com a célula
+                    cell.sprite.disableInteractive(); // Desabilita a interação com a célula
                     cell.locked = true; // Marca a célula como bloqueada
                     filledCells++;
                 }
             }
         }
-    }
-
-    createCheck(row, col) {
-        let cellX = this.cells[row][col].CellX;
-        let cellY = this.cells[row][col].CellY;
-        let scale;
-        if (this.size === 3){
-            cellX += 65;
-            cellY -= 50;
-            scale = 0.40;
-        } else if (this.size === 4){
-            cellX += 60;
-            cellY -= 40;
-            scale = 0.30;
-        } else {
-            cellX += 40;
-            cellY -= 30;
-            scale = 0.25;
-        }
-
-        let check = this.add.image(cellX, cellY, "check").setScale(scale);
-        console.log("Check created at:", cellX, cellY);
-        this.gridExtras.push(check);
     }
 
     createVirtualKeyboard(){
@@ -486,7 +475,7 @@ class Game extends Phaser.Scene{
                 const numberButton = this.add.image(buttonX, buttonY, "Number" + numbers[row][col]).setScale(0.5).setInteractive({ useHandCursor: true });
                 numberButton.baseScale=0.5;
                 const buttonTextStyle = { fontSize: `${Math.round(28 * this.gridNumberOpScale)}px`, fontFamily: 'Arial', color: '#ffffff' };
-    
+                
                 // Corrigido: usar o valor do botão (numbers[row][col]) em vez da posição
                 numberButton.on('pointerdown', () => {
                     if (this.selectedCell) {
@@ -498,7 +487,7 @@ class Game extends Phaser.Scene{
                         if (cell.value !== null) {
                             currentValue = cell.value.toString();
                         }
-                
+                        
                         // Verificar se o limite de dois dígitos foi atingido
                         if (currentValue.length < 2) {
                             // Concatenar o número clicado ao valor atual
@@ -517,7 +506,7 @@ class Game extends Phaser.Scene{
                 });
             }
         }
-    
+        
         // Criar botão de delete (fora do loop dos números)
         const deleteButtonX = keyboardX + (2 * (buttonSize + buttonPadding));
         const deleteButtonY = keyboardY + (3 * (buttonSize + buttonPadding));
@@ -525,7 +514,7 @@ class Game extends Phaser.Scene{
         const deleteButton = this.add.image(deleteButtonX, deleteButtonY, "Apagar").setScale(0.5).setInteractive({ useHandCursor: true });
         deleteButton.baseScale = 0.5;
         const deleteButtonTextStyle = { fontSize: `${Math.round(14 * this.gridNumberOpScale)}px`, fontFamily: 'Arial', color: '#ffffff' };
-       
+        
         deleteButton.on('pointerdown', () => {
             if (this.selectedCell) {
                 const { row, col } = this.selectedCell;
@@ -534,105 +523,124 @@ class Game extends Phaser.Scene{
                 cell.text.setText('');
             }
         });
-
+        
         const verificarButtonX = keyboardX + (0.03 * (buttonSize + buttonPadding));
         const verificarButtonY = keyboardY + (3 * (buttonSize + buttonPadding));
-
+        
         this.verificarButton = this.add.image(verificarButtonX, verificarButtonY, "Verificar").setScale(0.6).setInteractive({ useHandCursor: true });
         this.verificarButton.baseScale=0.6;
-
+        
         this.verificarButton.on('pointerdown', () => {
-            if (this.isGridComplete()) {
-                if (this.validateUserSolution()) {
-                    console.log("Parabéns! Você resolveu o crucigrama corretamente!");
-                } else {
-                    this.totalattempts += 1;
-                    if(this.totalattempts === 3){
-                        this.corrigirBT.clearTint().setAlpha(1);
-                        this.corrigirBT.setInteractive({ useHandCursor: true });
-                    }
-                    console.log("Solução incorreta. Tente novamente.", this.totalattempts);
-                }
+            if (this.validateUserSolution()) {
+                console.log("Parabéns! Você resolveu o crucigrama corretamente!");
             } else {
-                console.log("O crucigrama não está completo.");
+                this.totalattempts += 1;
+                if(this.totalattempts === 3){
+                    this.corrigirBT.clearTint().setAlpha(1);
+                    this.corrigirBT.setInteractive({ useHandCursor: true });
+                }
+                console.log("Solução incorreta. Tente novamente.", this.totalattempts);
             }
         });
         
         this.corrigirBT.on('pointerdown', () => {
             for (let row = 0; row < this.size; row++){
-                for (let col = 0; col < this.size; col++){
+                for (let col = 0; col < this.size; col++){  
                     if (!this.cells[row][col].locked){
-                        const cell = this.cells[row][col];
-                        cell.text.setText(cell.correctValue.toString());
-                        cell.locked = true;
-                        this.createCheck(row, col);
-                    } else {
-                        this.createCheck(row, col);
+                        let cell = this.cells[row][col];
+                        this.cells[row][col].text.setText(cell.correctValue.toString());
+                        if (this.cells[row][col].Resposta !== undefined){
+                            this.cells[row][col].Resposta.destroy(); 
+                            this.cells[row][col].Resposta.visible = false;
+                            console.log("Resposta destruída");   
+                        }
+                        this.cells[row][col].locked = true;
+                        this.cells[row][col].sprite.disableInteractive(); // Disable interaction with the cell
+                        //this.createCheck(row, col);
                     }
                 }
             }
             this.corrigirBT.disableInteractive();
+            this.corrigirBT.setTint(0x808080).setAlpha(0.5);
         });
     }
     
     validateUserSolution() {
+        let isValid = true;
         this.ClearSelectedCell();
         const userRowResults = [];
         const userColResults = [];
-    
-        // Calculate row results
-        for (let row = 0; row < this.gridSize; row += 2) { // Only even rows
-            const expression = [];
-            for (let col = 0; col < this.gridSize - 1; col++) {
-                expression.push(this.userGrid[row][col]);
-            }
-            const result = this.calculateVector(expression);
-            userRowResults.push(result);
-        }
-    
-        // Calculate column results
-        for (let col = 0; col < this.gridSize; col += 2) { // Only even columns
-            const expression = [];
-            for (let row = 0; row < this.gridSize - 1; row++) {
-                expression.push(this.userGrid[row][col]);
-            }
-            const result = this.calculateVector(expression);
-            userColResults.push(result);
-        }
-    
-        // Compare user results with the expected results
-        const rowsMatch = JSON.stringify(userRowResults) === JSON.stringify(this.rowResults);
-        const colsMatch = JSON.stringify(userColResults) === JSON.stringify(this.colResults);
-    
-        if (rowsMatch && colsMatch) {
-            // Lock the cells that are correct
-            for (let row = 0; row < this.size; row++) {
-                for (let col = 0; col < this.size; col++) {
-                    if (this.cells[row][col].correctValue === this.cells[row][col].value) {
-                        this.cells[row][col].locked = true;
-                        this.createCheck(row, col);
-                    }
+        
+        if (this.isGridComplete()){
+            
+            // Calculate row results
+            for (let row = 0; row < this.gridSize; row += 2) { // Only even rows
+                const expression = [];
+                for (let col = 0; col < this.gridSize - 1; col++) {
+                    expression.push(this.userGrid[row][col]);
                 }
+                const result = this.calculateVector(expression);
+                userRowResults.push(result);
             }
-            this.verificarButton.disableInteractive();
-            console.log("User solution is correct!");
-            return true;
-        } else {
-            for (let row = 0; row < this.size; row++) {
-                for (let col = 0; col < this.size; col++) {
-                    if (!this.cells[row][col].locked){
-                        if (this.cells[row][col].correctValue === this.cells[row][col].value){
-                            this.cells[row][col].locked = true;
-                            this.createCheck(row, col);
+            
+            // Calculate column results
+            for (let col = 0; col < this.gridSize; col += 2) { // Only even columns
+                const expression = [];
+                for (let row = 0; row < this.gridSize - 1; row++) {
+                    expression.push(this.userGrid[row][col]);
+                }
+                const result = this.calculateVector(expression);
+                userColResults.push(result);
+            }
+            
+            // Compare user results with the expected results
+            const rowsMatch = JSON.stringify(userRowResults) === JSON.stringify(this.rowResults);
+            const colsMatch = JSON.stringify(userColResults) === JSON.stringify(this.colResults);
+            
+            if (rowsMatch && colsMatch) {
+                // Lock the cells that are correct
+                for (let row = 0; row < this.size; row++) {
+                    for (let col = 0; col < this.size; col++) {
+                        if (!this.cells[row][col].locked) {
+                            if (this.cells[row][col].correctValue === this.cells[row][col].value) {
+                                this.cells[row][col].locked = true;
+                                this.createCheck(row, col);
+                            } else {
+                                this.createErr(row, col);
+                                isValid = false;
+                            }
                         }
                     }
                 }
+                this.createResposta(isValid);
+                this.verificarButton.disableInteractive();
+                console.log("User solution is correct!");
+                return true;
             }
-            console.log("User solution is incorrect.");
-            console.log("Expected row results:", this.rowResults, "User row results:", userRowResults);
-            console.log("Expected column results:", this.colResults, "User column results:", userColResults);
-            return false;
         }
+
+        for (let row = 0; row < this.size; row++) {
+            for (let col = 0; col < this.size; col++) {
+                if (!this.cells[row][col].locked) {
+                    if (this.cells[row][col].value !== null && !this.cells[row][col].locked){
+                        if (this.cells[row][col].correctValue === this.cells[row][col].value){
+                            this.cells[row][col].locked = true;
+                            this.createCheck(row, col);
+                        } else {
+                            this.createErr(row, col);
+                            isValid = false;
+                        }
+                    } else {
+                        isValid = false;
+                    }
+                }
+            }
+        }
+        this.createResposta(isValid);
+        console.log("User solution is incorrect.");
+        //console.log("Expected row results:", this.rowResults, "User row results:", userRowResults);
+        //console.log("Expected column results:", this.colResults, "User column results:", userColResults);
+        return false;
     }
 
     isGridComplete(){
@@ -648,6 +656,63 @@ class Game extends Phaser.Scene{
         return true;
     }
     
+    createCheck(row, col) {
+        let cellX = this.cells[row][col].CellX;
+        let cellY = this.cells[row][col].CellY;
+        let scale;
+        if (this.size === 3){
+            cellX += 65;
+            cellY -= 50;
+            scale = 0.40;
+        } else if (this.size === 4){
+            cellX += 60;
+            cellY -= 40;
+            scale = 0.30;
+        } else {
+            cellX += 40;
+            cellY -= 30;
+            scale = 0.25;
+        }
+
+        if (this.cells[row][col].Resposta){
+            this.cells[row][col].Resposta.destroy();
+        }
+        this.cells[row][col].Resposta = this.add.image(cellX, cellY, "Certo").setScale(scale);
+        console.log("Check created at:", cellX, cellY);
+    }
+
+    createResposta(isValid) {
+        if (isValid){
+            this.certo.visible = true;
+            this.errado.visible = false;
+        } else {
+            this.errado.visible = true;
+            this.certo.visible = false;
+        }
+    }
+
+    createErr(row, col) {
+        let cellX = this.cells[row][col].CellX;
+        let cellY = this.cells[row][col].CellY;
+        let scale;
+        if (this.size === 3){
+            cellX += 65;
+            cellY -= 50;
+            scale = 0.40;
+        } else if (this.size === 4){
+            cellX += 60;
+            cellY -= 40;
+            scale = 0.30;
+        } else {
+            cellX += 40;
+            cellY -= 30;
+            scale = 0.25;
+        }
+        
+        this.cells[row][col].Resposta = this.add.image(cellX, cellY, "Errado").setScale(scale);
+        console.log("Check created at:", cellX, cellY);
+    }
+
     generatePuzzle() {
         let attempts = 0;
         const maxAttempts = 1; // Prevent infinite loops
@@ -1259,6 +1324,7 @@ class Game extends Phaser.Scene{
         if (this.selectedCell) {
             const { row, col } = this.selectedCell;
             this.cells[row][col].sprite.setTint(0xffff00); // Yellow tint
+            this.errado.visible = false;
         }
     }
     
@@ -1270,6 +1336,7 @@ class Game extends Phaser.Scene{
                 for (let cell of row) {
                     if (cell && cell.sprite) cell.sprite.destroy();
                     if (cell && cell.text) cell.text.destroy();
+                    if (cell && cell.Resposta) cell.Resposta.destroy();
                 }
             }
         }
