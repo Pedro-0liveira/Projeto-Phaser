@@ -56,6 +56,7 @@ class Game extends Phaser.Scene{
     }
 
     create(){
+        console.log(infoUser);
         width = game.config.width;
         height = game.config.height;
         console.log("Game scene created with difficulty:", this.difficulty, "and size:", this.size);
@@ -108,6 +109,8 @@ class Game extends Phaser.Scene{
         this.errado = this.add.image(width * 0.9, height * 0.85, "Errado").setScale(0.9);
         this.errado.visible = false;
 
+        this.hellomessage = this.add.text(0.19 * game.config.width, 0.06 * game.config.height, "Olá "+ infoUser.firstName.split(" ")[0],{ fontFamily: 'font1',fontSize: 45,color: '#ffffff',align: 'center'});
+        this.hellomessage.visible = false;
 
         this.credBT.on('pointerdown', () => {
             this.scene.start("creditos");
@@ -138,6 +141,7 @@ class Game extends Phaser.Scene{
             this.errado.visible = false;
             this.certo.visible = false;
             this.totalattempts = 0;
+            this.verificarButton.setInteractive({ useHandCursor: true });
         });
         
         //Funcionalidade BTs
@@ -171,6 +175,26 @@ class Game extends Phaser.Scene{
         
         this.createCrucigrama();    
         this.createVirtualKeyboard();
+    }
+    update(){
+        if(infoUser.user !== '' && infoUser.user !== 'prof'){
+            // Case in which the user is already logged in
+            // Draw score and hello message top left
+            if(this.hellomessage.visible === false){
+                if(!percentagem){percentagem = "0%"};
+                this.hellomessage.setText("Olá " + [infoUser.firstName.split(' ')[0]] + "\n ( " + percentagem + " )");
+                this.hellomessage.visible = true;
+            }
+        } else {
+            this.hellomessage.visible = false;
+        }
+
+        if (callOnce == 0) {
+            console.log(percentagem ,"before");
+            sessionVerify();
+            console.log(percentagem ,"after");
+            callOnce = 1000;
+        }
     }
     
     isPrime(n) {
@@ -615,6 +639,8 @@ class Game extends Phaser.Scene{
                 }
                 this.createResposta(isValid);
                 this.verificarButton.disableInteractive();
+                saveScore("+", this.difficulty + "-" + this.size);
+                console.log(percentagem, "OLA");
                 console.log("User solution is correct!");
                 return true;
             }
@@ -639,6 +665,7 @@ class Game extends Phaser.Scene{
         }
         this.createResposta(isValid);
         console.log("User solution is incorrect.");
+        saveScore("-", this.difficulty + "-" + this.size);
         //console.log("Expected row results:", this.rowResults, "User row results:", userRowResults);
         //console.log("Expected column results:", this.colResults, "User column results:", userColResults);
         return false;

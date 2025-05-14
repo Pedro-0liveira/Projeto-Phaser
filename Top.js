@@ -21,7 +21,7 @@ class Top extends Phaser.Scene{
         this.load.image("Voltar", "sprites/quadradoback.png");
     }
     create(){
-
+        
     }
     update(){
 

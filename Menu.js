@@ -8,10 +8,11 @@ let scale;
 let difficulty;
 let size;
 let BTlock;
-let loggedin;
 
-var nome;
-var nome2;
+var globalFreq = 0;
+var globalTotal = 0;
+var globalScore = 0;
+globalProblems = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
 
 var percentagem = 0;
 var callOnce = 0;
@@ -48,7 +49,6 @@ class Menu extends Phaser.Scene{
         difficulty = 0;
         size = 0;
         BTlock = false;
-        loggedin = false;
 
         //Fundo
         this.background = this.add.sprite(width * 0.5, height * 0.5, "background");
@@ -123,13 +123,24 @@ class Menu extends Phaser.Scene{
         //Botao Login
         this.loginBT = this.add.image(width * 0.42, height * 0.93, "Login");
         this.loginBT.setScale(scale);
-        this.loginBT.visible = true;
         this.loginBT.setInteractive({ useHandCursor: true });
         //Botao Logout
         this.logoutBT = this.add.image(width * 0.42, height * 0.93, "Logout");
         this.logoutBT.setScale(scale);
-        this.logoutBT.visible = false;
         this.logoutBT.setInteractive({ useHandCursor: true });
+
+        //Verificar qual botao apresentar (Se o user ja esta loggedin)
+        if (infoUser.user === ''){
+            this.loginBT.visible = true;
+            this.logoutBT.visible = false;
+        } else {
+            this.loginBT.visible = false;
+            this.logoutBT.visible = true;
+        }
+
+        this.hellomessage = this.add.text(0.19 * game.config.width, 0.06 * game.config.height, "Olá "+ infoUser.firstName.split(" ")[0],{ fontFamily: 'font1',fontSize: 45,color: '#ffffff',align: 'center'});
+        this.hellomessage.visible = false;
+
         //Menu Login
         this.qdlogin = this.add.sprite(0.5 * game.config.width, 0.50 * game.config.height, "Menu Login");
         this.qdlogin.setScale(scale*1.5);
@@ -140,15 +151,12 @@ class Menu extends Phaser.Scene{
         this.fecharBTlog.setScale(scale);
         this.fecharBTlog.setInteractive({ useHandCursor: true });
         this.loginBTpressed = false;
-        this.loggedIn = false;
+
         //Botao Ok (login)
         this.OkBTlog = this.add.image(width * 0.61, height * 0.74, "Ok");
         this.OkBTlog.visible = false;
         this.OkBTlog.setScale(scale);
         this.OkBTlog.setInteractive({ useHandCursor: true });
-
-        this.ola = this.add.text(0.82 * game.config.width ,0.25 * game.config.height, nome2,{ fontFamily: 'font1',fontSize: 35,color: '#641602',align: 'center'});
-        this.ola.visible = false;
 
         let user = `
         <input type="text" name="username" style="font-size: 50px;font-family:'font1';text-align:center;">`;
@@ -166,16 +174,9 @@ class Menu extends Phaser.Scene{
         this.loginErrorMsg = this.add.text(0.4 * game.config.width, 0.635 * game.config.height,"Utilizador ou Password Errados",{ fontFamily: 'font1',fontSize: 30,color: '#ff0000',align: 'center'});
         this.loginErrorMsg.visible = false;
 
-        
         const nonloginbuttons = [this.boneco, this.nivel1BT, this.nivel2BT, this.nivel3BT, this.tam3BT, this.tam4BT,
             this.tam5BT, this.infoBT, this.credBT, this.maxBT, this.minBT, this.voltarBT];
         const loginbuttons =    [this.OkBTlog, this.fecharBTlog];
-        /*
-        this.debugText = this.add.text(10, 10, '', { fontSize: '16px', fill: '#fff' }).setVisible(false);
-        this.input.keyboard.on('keydown-D', () => {
-            debugMode = !debugMode;
-            this.debugText.setVisible(debugMode);
-        });*/
 
         //Funcionalidade BTs
         this.input.on('gameobjectover',function(pointer, gameObject) {
@@ -335,17 +336,17 @@ class Menu extends Phaser.Scene{
                     //if (verificar que tem alguma coisa nas caixas)
                     let user = this.userbox.getChildByName("username").value;
                     let password = this.passbox.getChildByName("password").value;
-                    console.log(user,password);
-                    let loggedin = 0;
 
                     if (user != '' && password != '') {
-                        // AQUI ESTA A LINHA USAR COM CUIDADO
-                        loggedin = login(user, password,this);
+                        login(user, password,this);
                         this.userbox.getChildByName("username").value = '';
                         this.passbox.getChildByName("password").value = '';
+                    } else if (user === '' && password === '') {
+                        // Apenas para acelerar o login para testes >>>> REMOVER DEPOIS
+                        login("hypmat5a01", "formacao",this);
                     }
                     // tentar o login e armazenar valor e informaçoes da conta
-                    if (loggedin === -1){
+                    if (infoUser.user !== ''){
                         this.loginErrorMsg.visible = true;
                     }else{
                         this.loginBTpressed = !this.loginBTpressed;
@@ -364,19 +365,36 @@ class Menu extends Phaser.Scene{
                         this.logoutBT.visible = true;
                         this.loginBT.visible = false;
                     }
-                    // se login retornar falso 
                     break;
                 case this.logoutBT:
                     //limpar informaçao do user
-                    loggedin = 0;
                     this.logoutBT.visible = false;
                     this.loginBT.visible = true;
                     infoUser.logout();
-                    nome2 = undefined;
                     break;
             }
         },this);
     }
     update(){
+        if(infoUser.user !== '' && infoUser.user !== 'prof'){
+            // Case in which the user is already logged in
+            // Draw score and hello message top left
+            if(this.hellomessage.visible === false || true){
+                if(!percentagem){percentagem = "0%"};
+                this.hellomessage.setText("Olá " + [infoUser.firstName.split(' ')[0]] + "\n ( " + percentagem + " )");
+                this.hellomessage.visible = true;
+            }
+            console.log("setting true");
+        } else {
+            console.log("setting false");
+            this.hellomessage.visible = false;
+        }
+
+        if (callOnce == 0) {
+            console.log(percentagem ,"before");
+            sessionVerify();
+            console.log(percentagem ,"after");
+            callOnce = 1000;
+        }
     }
 }

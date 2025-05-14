@@ -20,4 +20,5 @@
         scene: [Menu, Game, Creditos, Info],
     }
     var game = new Phaser.Game(config);
-    var infoUser = new InfoUser();
+    var infoUser = new loginInfo();
+    var percentagem = "0%"; 
