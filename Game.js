@@ -180,20 +180,13 @@ class Game extends Phaser.Scene{
         if(infoUser.user !== '' && infoUser.user !== 'prof'){
             // Case in which the user is already logged in
             // Draw score and hello message top left
-            if(this.hellomessage.visible === false){
+            if(this.hellomessage.visible === false || true){
                 if(!percentagem){percentagem = "0%"};
                 this.hellomessage.setText("Olá " + [infoUser.firstName.split(' ')[0]] + "\n ( " + percentagem + " )");
                 this.hellomessage.visible = true;
             }
         } else {
             this.hellomessage.visible = false;
-        }
-
-        if (callOnce == 0) {
-            console.log(percentagem ,"before");
-            sessionVerify();
-            console.log(percentagem ,"after");
-            callOnce = 1000;
         }
     }
     
@@ -1011,9 +1004,9 @@ class Game extends Phaser.Scene{
             let priornum = this.checkfirstexpression(expression);
             let priorop = this.prevNonMulexpression(expression);
             switch (priorop){
-                case '-':
-                    maxnum = Math.min(Math.floor((100 - priornum) / mfactor),maxnum);
                 case '+':
+                    maxnum = Math.min(Math.floor((100 - priornum) / mfactor),maxnum);
+                case '-':  
                     maxnum = Math.min(Math.floor(priornum / mfactor),maxnum);
             }
         }

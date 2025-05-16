@@ -15,7 +15,6 @@ var globalScore = 0;
 globalProblems = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
 
 var percentagem = 0;
-var callOnce = 0;
 
 class Menu extends Phaser.Scene{
     constructor(){
@@ -346,8 +345,9 @@ class Menu extends Phaser.Scene{
                         login("hypmat5a01", "formacao",this);
                     }
                     // tentar o login e armazenar valor e informaçoes da conta
-                    if (infoUser.user !== ''){
-                        this.loginErrorMsg.visible = true;
+                    if (infoUser.user === ''){
+                        console.log("user branco :", infoUser.user);
+                        //this.loginErrorMsg.visible = true;
                     }else{
                         this.loginBTpressed = !this.loginBTpressed;
                         fadeOut(this.qdlogin);
@@ -376,6 +376,43 @@ class Menu extends Phaser.Scene{
         },this);
     }
     update(){
+        const resetscale = (btn) => {
+            btn.setScale(scale);
+        }
+
+        const fadeIn = (btn) => {
+            btn.setAlpha(0).setVisible(true);
+            this.tweens.add({ targets: btn, alpha: 1, duration: 200, onComplete: () => { BTlock = false; } });
+        };
+
+        const fadeOut = (btn, callback) => {
+            this.tweens.add({ targets: btn, alpha: 0, duration: 300, onComplete: () => { btn.setVisible(false); if (callback) callback(); } });
+        };
+
+        const grayIn = (btn) => {
+            btn.setTint(0x808080).setAlpha(0.5);
+        };
+
+        const grayOut = (btn) => {
+            btn.clearTint().setAlpha(1);
+        };
+
+        const disableInteract = (btns) => {
+            btns.forEach(button => {
+                button.disableInteractive();
+            });
+        };
+        const enableInteract = (btns) => {
+            btns.forEach(button => {
+                button.setInteractive({ useHandCursor: true });
+            });
+        };
+
+        const nonloginbuttons = [this.boneco, this.nivel1BT, this.nivel2BT, this.nivel3BT, this.tam3BT, this.tam4BT,
+            this.tam5BT, this.infoBT, this.credBT, this.maxBT, this.minBT, this.voltarBT];
+        const loginbuttons =    [this.OkBTlog, this.fecharBTlog];
+
+
         if(infoUser.user !== '' && infoUser.user !== 'prof'){
             // Case in which the user is already logged in
             // Draw score and hello message top left
@@ -384,17 +421,27 @@ class Menu extends Phaser.Scene{
                 this.hellomessage.setText("Olá " + [infoUser.firstName.split(' ')[0]] + "\n ( " + percentagem + " )");
                 this.hellomessage.visible = true;
             }
+            if(this.qdlogin.visible === true){
+                fadeOut(this.qdlogin);
+                fadeOut(this.fecharBTlog);
+                fadeOut(this.OkBTlog);
+                this.userbox.visible = false;
+                this.passbox.visible = false;
+                grayOut(this.loginBT);
+                resetscale(this.fecharBTlog);
+                resetscale(this.loginBT);
+                enableInteract(nonloginbuttons);
+                this.userbox.setVisible = false;
+                this.passbox.setVisible = false;
+                this.loginErrorMsg.visible = false;
+                this.logoutBT.visible = true;
+                this.loginBT.visible = false;
+                this.loginBTpressed = !this.loginBTpressed;
+            }
             console.log("setting true");
         } else {
             console.log("setting false");
             this.hellomessage.visible = false;
-        }
-
-        if (callOnce == 0) {
-            console.log(percentagem ,"before");
-            sessionVerify();
-            console.log(percentagem ,"after");
-            callOnce = 1000;
         }
     }
 }

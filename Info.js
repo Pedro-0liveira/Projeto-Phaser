@@ -82,7 +82,7 @@ class Info extends Phaser.Scene{
         if(infoUser.user !== '' && infoUser.user !== 'prof'){
             // Case in which the user is already logged in
             // Draw score and hello message top left
-            if(this.hellomessage.visible === false){
+            if(this.hellomessage.visible === false || true){
                 if(!percentagem){percentagem = "0%"};
                 this.hellomessage.setText("Olá " + [infoUser.firstName.split(' ')[0]] + "\n ( " + percentagem + " )");
                 this.hellomessage.visible = true;

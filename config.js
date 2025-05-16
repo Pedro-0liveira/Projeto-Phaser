@@ -21,4 +21,4 @@
     }
     var game = new Phaser.Game(config);
     var infoUser = new loginInfo();
-    var percentagem = "0%"; 
+    var percentagem = "0%";

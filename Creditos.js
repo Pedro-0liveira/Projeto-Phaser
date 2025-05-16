@@ -47,7 +47,7 @@ class Creditos extends Phaser.Scene{
         this.hellomessage = this.add.text(0.19 * game.config.width, 0.06 * game.config.height, "Olá "+ infoUser.firstName.split(" ")[0],{ fontFamily: 'font1',fontSize: 45,color: '#ffffff',align: 'center'});
         this.hellomessage.visible = false;
         
-        //Funcionalidade BTs
+        // Funcionalidade BTs
         this.input.on('gameobjectover',function(pointer, gameObject) {
             gameObject.setScale(scale + 0.05);
         },this);
@@ -80,7 +80,7 @@ class Creditos extends Phaser.Scene{
         if(infoUser.user !== '' && infoUser.user !== 'prof'){
             // Case in which the user is already logged in
             // Draw score and hello message top left
-            if(this.hellomessage.visible === false){
+            if(this.hellomessage.visible === false || true){
                 if(!percentagem){percentagem = "0%"};
                 this.hellomessage.setText("Olá " + [infoUser.firstName.split(' ')[0]] + "\n ( " + percentagem + " )");
                 this.hellomessage.visible = true;
