@@ -11,7 +11,7 @@ class Creditos extends Phaser.Scene{
         this.load.image("Maximizar", "sprites/fullscreen-bt-1.png");
         this.load.image("Minimizar", "sprites/fullscreen-bt-2.png");
         this.load.image("Login", "sprites/login-bt.png");
-        this.load.image("Voltar", "sprites/back-bt.png");
+        this.load.image("Back", "sprites/back-bt.png");
     }
     create(){
         width = game.config.width;
@@ -38,13 +38,13 @@ class Creditos extends Phaser.Scene{
         this.minBT.setScale(scale);
         this.minBT.setInteractive({ useHandCursor: true });
 
-        this.voltarBT = this.add.image(width * 0.24, height * 0.85, "Voltar");
-        this.voltarBT.setScale(scale);
-        this.voltarBT.setInteractive({ useHandCursor: true });
+        this.backBT = this.add.image(width * 0.24, height * 0.85, "Back");
+        this.backBT.setScale(scale);
+        this.backBT.setInteractive({ useHandCursor: true });
         
         this.creditos = this.add.image(width * 0.68, height * 0.53, "creditos");
 
-        this.hellomessage = this.add.text(0.19 * game.config.width, 0.06 * game.config.height, "Olá "+ infoUser.firstName.split(" ")[0],{ fontFamily: 'font1',fontSize: 45,color: '#ffffff',align: 'center'});
+        this.hellomessage = this.add.text(0.135 * game.config.width, 0.09 * game.config.height, "Olá "+ infoUser.firstName.split(" ")[0],{ fontFamily: 'font1',fontSize: 40,color: '#ffffff',align: 'center'});
         this.hellomessage.visible = false;
         
         // Funcionalidade BTs
@@ -59,7 +59,7 @@ class Creditos extends Phaser.Scene{
             this.scene.start("Info");
         });
 
-        this.voltarBT.on('pointerdown', () => {
+        this.backBT.on('pointerdown', () => {
             this.scene.start("Menu");
         });
 

@@ -139,7 +139,7 @@ class Menu extends Phaser.Scene{
         this.OkBTlog.setScale(scale);
         this.OkBTlog.setInteractive({ useHandCursor: true });
         // Hello Message (Displays User's Rating %)
-        this.hellomessage = this.add.text(0.19 * game.config.width, 0.06 * game.config.height, "Olá "+ infoUser.firstName.split(" ")[0],{ fontFamily: 'font1',fontSize: 45,color: '#ffffff',align: 'center'});
+        this.hellomessage = this.add.text(0.135 * game.config.width, 0.09 * game.config.height, "Olá "+ infoUser.firstName.split(" ")[0],{ fontFamily: 'font1',fontSize: 40,color: '#ffffff',align: 'center'});
         this.hellomessage.visible = false;
         // Check which button to display (Log-in or Log-Out)
         if (infoUser.user === ''){

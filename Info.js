@@ -52,7 +52,7 @@ class Info extends Phaser.Scene{
         this.instrucoes = this.add.image(width * 0.68, height * 0.53, "instrucoes");
         
         // Hello Message (Displays User's Rating %)
-        this.hellomessage = this.add.text(0.19 * game.config.width, 0.06 * game.config.height, "Olá "+ infoUser.firstName.split(" ")[0],{ fontFamily: 'font1',fontSize: 45,color: '#ffffff',align: 'center'});
+        this.hellomessage = this.add.text(0.135 * game.config.width, 0.09 * game.config.height, "Olá "+ infoUser.firstName.split(" ")[0],{ fontFamily: 'font1',fontSize: 40,color: '#ffffff',align: 'center'});
         this.hellomessage.visible = false;
 
         // Functionality For The Buttons
