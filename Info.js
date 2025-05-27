@@ -1,8 +1,10 @@
+// Info.js handles the Info scene
 class Info extends Phaser.Scene{
     constructor(){
         super("Info");
     }
     preload(){
+        // Pre-loading of assets
         this.load.image("background", "sprites/background.png");
         this.load.image("Creditos", "sprites/bt_creditos.png");
         this.load.image("Info", "sprites/bt_info.png");
@@ -17,45 +19,50 @@ class Info extends Phaser.Scene{
         height = game.config.height;
         scale = 0.9;
 
-        //createGrid
-
+        // Loading Assets
+        // Background
         this.background = this.add.sprite(width * 0.5, height * 0.5, "background");
         this.background.setScale(1.5);
 
+        // Info Button
         this.infoBT = this.add.image(width * 0.16, height * 0.89, "Info");
         this.infoBT.setTint(0x808080).setAlpha(0.5);
         this.infoBT.setScale(scale);
-
+        // Credits Button
         this.credBT = this.add.image(width * 0.08, height * 0.93, "Creditos");
         this.credBT.setScale(scale);
         this.credBT.setInteractive({ useHandCursor: true });
 
+        // Fullscreen/Maximize Button 
         this.maxBT = this.add.image(width * 0.065, height * 0.1, "Maximizar");
         this.maxBT.setScale(scale);
         this.maxBT.setInteractive({ useHandCursor: true });
-
+        // Minimize Button
         this.minBT = this.add.image(width * 0.065, height * 0.1, "Minimizar");
         this.minBT.visible = false;
         this.minBT.setScale(scale);
         this.minBT.setInteractive({ useHandCursor: true });
 
+        // Back Button 
         this.voltarBT = this.add.image(width * 0.24, height * 0.85, "Voltar");
         this.voltarBT.setScale(scale);
         this.voltarBT.setInteractive({ useHandCursor: true });
         
+        // Instruction Board ( Needs to be edited to display how to play )
         this.instrucoes = this.add.image(width * 0.68, height * 0.53, "instrucoes");
-
+        
+        // Hello Message (Displays User's Rating %)
         this.hellomessage = this.add.text(0.19 * game.config.width, 0.06 * game.config.height, "Olá "+ infoUser.firstName.split(" ")[0],{ fontFamily: 'font1',fontSize: 45,color: '#ffffff',align: 'center'});
         this.hellomessage.visible = false;
 
-        //Funcionalidade BTs
+        // Functionality For The Buttons
+        // Hover Animation For The Buttons
         this.input.on('gameobjectover',function(pointer, gameObject) {
                 gameObject.setScale(scale + 0.05);
         },this);
         this.input.on('gameobjectout',function(pointer, gameObject) {
                 gameObject.setScale(scale);
         },this);
-
 
         this.credBT.on('pointerdown', () => {
             this.scene.start("Creditos");
