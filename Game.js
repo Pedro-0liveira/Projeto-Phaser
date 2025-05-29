@@ -534,6 +534,7 @@ class Game extends Phaser.Scene{
             }
             // Only works once ( or until puzzle regenerated )
             this.amendBT.disableInteractive();
+            this.clearSelectedCell();
             this.amendBT.setTint(0x808080).setAlpha(0.5);
         });
     }
