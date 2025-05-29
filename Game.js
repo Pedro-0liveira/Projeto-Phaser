@@ -318,7 +318,8 @@ class Game extends Phaser.Scene{
                         text: opText,
                         value: puzzle.horizontalOps[row][col]
                     };
-                } else if (row < this.size - 1) { // Text between rows
+                }
+                if (row < this.size - 1) { // Text between rows
                     const opX = cellX;
                     const opY = cellY + this.cellSize/2 + this.cellPadding/2;
                     
